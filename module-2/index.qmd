@@ -242,3 +242,160 @@ respl %>%
   ylim(0,1) + 
   labs(y = "Percent of good respiratory status", x = "Visit", color = "Treatment")
 ```
+
+## Example: Observations and questions{.smaller}
+
+* Patients in clinic 2 have higher percentage of good respiratory status
+* Within each clinic, percentages of good respiratory status at baseline are similar between treatment groups
+* In both clinics, we observe an increase in percentage of good respiratory status in the treatment arms
+* Does the rate of change in good respiratory status differ between the two treatments? Between clinics?
+
+$$
+\begin{aligned}
+\text{logit}\left\{\Pr(Y_{ij}=1)\right\} &= \beta_{1} + \beta_{2}\text{Clinic}_{i} + \beta_{3}\text{Visit}_{ij}+\beta_{4}\text{Trt}_{i} + \\ & \beta_{5}\text{Clinic}_{i}\times \text{Visit}_{ij} + \beta_{6}\text{Clinic}_{i}\times \text{Trt}_{i} + \beta_{7}\text{Visit}_{ij} \times \text{Trt}_{i} + \\ 
+& \beta_{8}\text{Clinic}_{i} \times \text{Visit}_{ij} \times \text{Trt}_{i}
+\end{aligned}
+$$
+where $\text{Clinic}_{i} = 1$ for clinic 2 and $0$ otherwise, and $\text{Trt}_{i} = 1$ for the treatment arm and $0$ otherwise.
+
+## Example: Model interpretation{.smaller}
+
+With this model, the mean response for patients in clinic 1 and placebo arm is:
+$$
+\text{logit}\left\{\Pr(Y_{ij}=1)\right\} = \beta_{1} + \beta_{3}\text{Visit}_{ij}.
+$$
+The mean response for patients in clinic 1 and treatment arm is:
+$$
+\text{logit}\left\{\Pr(Y_{ij}=1)\right\} = (\beta_{1} + \beta_{4}) + (\beta_{3} + \beta_{7})\text{Visit}_{ij}.
+$$
+The mean response for patients in clinic 2 and placebo arm is:
+$$
+\text{logit}\left\{\Pr(Y_{ij}=1)\right\} = (\beta_{1} + \beta_{2}) + (\beta_{3} + \beta_{5})\text{Visit}_{ij} 
+$$
+Finally, the mean response for patient in clinic 2 and treatment arm is:
+$$
+\text{logit}\left\{\Pr(Y_{ij}=1)\right\} = (\beta_{1} + \beta_{2} + \beta_{4} + \beta_{6}) + (\beta_{3} + \beta_{5} + \beta_{7}+ \beta_{8})\text{Visit}_{ij} 
+$$
+
+## Model building{.smaller}
+
+Diggle, Heagerty, Liang and Zeger (2002)
+
+> When regression coefficients are the scientific focus as in the examples
+here, one should invest the lion’s share of time in modeling the mean
+structure, while using a reasonable approximation to the covariance. The
+robustness of the inferences about can be checked by fitting a final model
+using different covariance assumptions and comparing the two sets of
+estimates and their robust standard errors. If they differ substantially, a
+more careful treatment of the covariance model may be necessary.
+
+#### Strategy
+
+1. Model the mean structure assuming unstructured working correlation structure
+2. Compare models between different working correlation structures
+  
+
+## Model mean structure
+
+* Because we are working with **binary** data we need to include the argument: `scale.fix=TRUE`
+* This option keeps the scale parameter **fixed** to its default value of 1 rather than estimated. 
+
+Code for three-way interaction model with unstructured working covariance
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+model1 <- geeglm(resp ~ trt1*visit*clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "unstructured",
+                 scale.fix = TRUE,
+                 data = respl)
+summary(model1)
+```
+
+
+## Model mean structure
+
+Output from three-way interaction model with unstructured working covariance
+
+```{r}
+#| echo: FALSE
+#| eval: TRUE
+model1 <- geeglm(resp ~ trt1*visit*clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "unstructured",
+                 scale.fix = TRUE,
+                 data = respl)
+summary(model1)
+```
+
+Do not reject $H_0: \beta_{8} = 0$
+
+## Model mean structure
+
+Code for three two-way interactions model with unstructured working covariance
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+model2 <- geeglm(resp ~ trt1*visit + clinic2*visit + trt1*clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "unstructured",
+                 scale.fix = TRUE,
+                 data = respl)
+summary(model2)
+```
+The two-way interactions are not important.
+
+## Model covariance {.smaller}
+::: {.column width="49%"}
+
+No interaction model with various working covariances
+
+* Use QIC (quasi-likelihood information criterion) to select a correlation structure
+  + Analogous to AIC for quasi-likelihood
+  + QIC can be used to compare models with different mean structures and different working correlation structures
+  + QICu is only used to compare models with different mean structures but the same working correlation structure
+
+:::
+
+::: {.column width="49%"}
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+model3un <- geeglm(resp ~ trt1 + visit + clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "unstructured",
+                 scale.fix = TRUE,
+                 data = respl)
+
+model3ex <- geeglm(resp ~ trt1 + visit + clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "exchangeable",
+                 scale.fix = TRUE,
+                 data = respl)
+
+model3ar1 <- geeglm(resp ~ trt1 + visit + clinic2,
+                   id = id,
+                   family = binomial(link = "logit"),
+                   corstr = "ar1",
+                   scale.fix = TRUE,
+                   data = respl)
+```
+
+:::
+
+## Model covariance
+
+```{r}
+summary(model3un)$coef
+summary(model3un)$corr
+summary(model3ex)$coef
+summary(model3ex)$corr
+summary(model3ar1)$coef
+summary(model3ar1)$corr
+```
+
