@@ -1,0 +1,140 @@
+---
+title: "Module 2: Marginal models"
+author: "Aya Mitani"
+format:
+  revealjs:
+    theme: theme.scss
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(geepack)
+library(lme4)
+library(kableExtra)
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
+```
+
+# Review of Generalized linear models (GLM)
+
+## Generalized linear models (GLM){.smaller}
+
+* **Generalized linear models (GLM)** are a class of parametric statistical models for the conditional distribution of a response $Y_i$ given a $p$-vector of covariates $X_i$:
+  1) probability distribution, $Y_i \sim f_Y(y)$
+  2) linear predictor, $\eta_i = X_i^{T}\beta$
+  3) link function, $g(\cdot)$ such that $g(\mu_i) = \eta_i$ where $\mu_i = E(Y_i|X_i)$
+* The theory of GLMs focuses on distributions that belong to the *exponential dispersion family*
+  - Bernoulli and Poisson distributions are both in the exponential family
+
+$$
+f_Y(y_i;\theta_i,\phi) = \exp\left\{\frac{y_i\theta_i - b(\theta_i)}{a_i(\phi)}+c(y_i,\phi)\right\}
+$$
+
+## Examples of GLM{.smaller}
+
+  - Logistic regression for binary responses
+  - Log-linear regression for counts
+  - Proportional odds model for ordinal responses
+
+<br>
+
+| Response type | Canonical link | Mean function                          | Variance function |
+|---------------|----------------|----------------------------------------|-------------------|
+| Continuous    | Identity       | $\mu_{ij}=X^{T}_{ij}\beta$             | $\phi$            |
+| Binary        | Logit          | $\text{log}\left(\frac{\mu_{ij}}{1-\mu_{ij}}\right)=X^{T}_{ij}\beta$ | $\mu_{ij}(1-\mu_{ij})$ ($\phi=1$)|
+| Count         | Log            | $\text{log}(\mu_{ij})=X^{T}_{ij}\beta$ | $\phi \mu_{ij}$                    |                   
+
+
+## GLM in R
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+
+## see 
+?family
+
+## logistic regression
+glm(y ~ x1 + x2, family = binomial(link = "logit"), data = mydata)
+
+## Poisson regression
+glm(y ~ x1 + x2, family = poisson(link = "log"), data = mydata)
+```
+
+
+## Marginal models for correlated data {.smaller}
+
+* One extension of GLM to correlated data
+* Marginal models for a **continuous** response is a special case of **general linear model** 
+<!-- * For discrete **repeated** responses, the interpretation of regression coefficients from marginal models is not the same from mixed effects models -->
+<!--   - Marginal model $=$ Population-average model -->
+<!--   - Mixed effects model $=$ Subject-specific model -->
+* Marginal models are primarily used to make inferences about **population means**
+* The goal is to make inference about the mean response
+  - The model for the mean response depends only on the covariates of interest ($X_{ij}$), and not on any random effects or previous responses
+* The within-subject association among the repeated measures are considered as a "nuisance" characteristic
+  + But must be accounted for to make correct inferences about changes in the population mean response
+  
+  
+## Three-part specifications{.smaller}
+
+1. The marginal expectation of the response, $E(Y_{ij}|X_{ij}) = \mu_{ij}$, depends on the covariates, $X_{ij}$, through a known link function
+$$
+g(\mu_{ij}) = \eta_{ij} = X^{T}_{ij}\beta.
+$$
+
+2. The variance of each $Y_{ij}$, given the covariates, depends on the mean according to 
+$$
+\text{Var}(Y_{ij}|X_{ij}) = \phi v(\mu_{ij}),
+$$
+where $v(\mu_{ij})$ is a known "variance function" and $\phi$ is a scale parameter that may be known or need to be estimated.
+
+
+## Three-part specifications (continued) {.smaller}
+
+3. The **pairwise** within-subject association among the vector of repeated responses, given the covariates, is assumed to be a function of the means, $\mu_{ij}$, and an additional set of within-subject association parameters, $\alpha$. The covariance matrix of the repeated responses can be constructed as the product of standard deviations and correlations
+$$
+V_i = A^{1/2}_{i}\text{Corr}(Y_{i})A^{1/2}_{i},
+$$
+where $A_{i}$ is a diagonal matrix with $\text{Var}(Y_{ij}|X_{ij})=\phi v(\mu_{ij})$ along the diagonal and $\text{Corr}(Y_{i})$ is the correlation matrix which is a function of $\alpha$. 
+
+
+## Generalized estimating equations {.smaller}
+
+* In marginal models, we don't make any assumptions about the full distributional property of the response $Y_{ij}$
+  + We only specify the first two moments of the distribution of $Y_{ij}$
+  + Therefore, the analysis is **semi-parametric**
+* We cannot specify a likelihood $\rightarrow$ cannot use MLE for estimation/inference
+* We construct an unbiased estimating equation and derive the asymptotic sampling distribution of the resulting estimator
+
+The objective is to minimize the function:
+$$
+\sum_{i=1}^{N}\left\{y_{i}-\mu_{i}(\beta)\right\}^{T}V_{i}(\beta, \alpha, \phi)^{-1}\left\{y_{i}-\mu_{i}(\beta)\right\}
+$$
+with respect to $\beta$, where $V_{i}$ is treated as known.
+
+## Generalized estimating equations {.smaller}
+
+If a minimum of the above function exists, then it must solve the following **generalized estimating equations**:
+$$
+\sum_{i=1}^{N}D^{T}_{i}(\beta)V_{i}(\beta, \alpha, \phi)^{-1}\left\{y_{i}-\mu_{i}(\beta)\right\}=0
+$$
+where
+
+* $V_{i}$ is the so-called $n_{i} \times n_{i}$ "working" covariance matrix
+* $D_{i} = \partial \mu_{i}/\partial \beta$ is the $n_{i} \times p$ matrix containing the derivatives of $\mu_{i}$ with respect to the components of $\beta$
+
+## Generalized estimating equations {.smaller}
+
+In simple form, the GEE can be expressed as
+$$
+\sum_{i=1}^{N}D^{T}_{i}V_{i}^{-1}(y_{i}-\mu_{i})=0.
+$$
+
+* The GEE are functions of both $\beta$ and $\alpha$
+* The GEE have no closed-form solution (except for the identity link function)
+* Finding the solution for $\beta$ requires an **iterative algorithm** (e.g. Fisher's scoring algorithm)

@@ -1,0 +1,302 @@
+---
+title: "Module 1: Introduction, visualization, and general linear models"
+author: "Aya mitani"
+format:
+  revealjs:
+    theme: theme.scss
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(geepack)
+library(lme4)
+library(kableExtra)
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
+```
+
+
+
+## Background and housekeeping
+
++ Most of workshop materials is from CHL5222 Analysis of Correlated Data taught by me for last four years
++ You should have received workshop materials in advance
++ If there are errors (mostly likely there will be!), I will update materials and redistribute
+
+## Content of workshop
++ Workshop focuses on **application** rather than **theory**
++ Example data sets are unrealistically clean
+  * Real world data are super messy
+  * Majority of project time is spent on data cleaning
+
+
+## Today's schedule
+
+
+## example
+
+Example of introduction
+
+```{r}
+#| echo: True
+x <- c(1,2,3)
+```
+
+
+# Introduction
+
+## Correlated data
+
+* Many statistical tests and models assume that responses are **univariate** and **independent** 
+* In this class, we consider settings where responses are **multivariate** and/or exhibit **dependence**
+
+## Sources of correlation 
+
+Correlation between data can arise from many sources:
+
+#### Clustered data
+
+* Units of observation belong to a cluster, either by design or nature
+  + Group-randomized trial
+  + Individual members of a family
+  + Patients within a hospital
+  + Teeth within an individual
+* Responses within a cluster are usually **positively** correlated
+
+## Sources of correlation 
+
+#### Longitudinal data
+
+* Each individual's responses are measured over time
+* Special case of clustered data
+  + Responses are clustered within individuals and have temporal order
+  + Goal is to characterize change in response over time and factors that influence change
+  + Balanced study design: All individuals are measured at the same occasions
+  + Unbalanced study design: Otherwise
+
+
+## Sources of correlation
+
+#### Between-individual heterogeneity
+* Natural variation in individuals' propensity to respond
+  + Some individuals consistently respond higher than the average, while others consistently respond below the average
+* Variability among individuals in their response trajectories over time
+  + Some individuals ``gains" will be above the average, while others will be below the average
+
+## Sources of correlation in longitudinal data
+
+#### Within-individual biological variation
+* Responses from the same individual vary over time
+  + Measurements on the same individual are more similar the closer in time they are taken, and are less similar the further apart in time
+
+#### Measurement error
+* Variability due to the imprecision of the measurement procedure
+  + Not unique to longitudinal (clustered) data
+  + Measurement error is
+    - low for height and weight
+    - higher for LDL cholesterol, fasting glucose level
+    - high for self-reported measures like well-being and quality-of-life
+
+
+## Sources of correlation in longitudinal data
+
+**Within-individual (cluster) variation**
+
+* Using a more \alert{precise} or \alert{reliable} measurement procedure will result in repeated measurements with \alert{higher} correlations than if a less precise or reliable measurement procedure had been used
+* Many longitudinal studies do not have sufficient data to estimate \alert{both} within-individual biological variation and measurement error
+* For purposes of estimation, both sources of variation need to be combined into a single component of \alert{within-individual variance}
+
+
+
+## Notation
+
+::: {.column width="49%"}
+#### Independent data
+
+* Subject: $i=1,...,N$
+* Response variable: $Y_{i}$ 
+* Explanatory variable: $x_{i}$
+
+:::
+
+::: {.column width="49%"}
+#### Correlated (dependent) data
+
+* Sample:
+  + Subject: $i=1,...,N$
+  + Observation: $j=1,...,n_{i}$
+  + Total sample size: $\sum_{i=1}^{N}n_{i}=m$
+* Response variable: $Y_{ij}$
+* Explanatory variable: $x_{ij}$
+
+:::
+
+
+## Example 1: Study of dental growth {.smaller}
+
+A study of dental growth measurements of the distance (mm) from the center of the pituitary gland to the pteryomaxillary fissure were obtained on 11 girls and 16 boys at ages 8, 10, 12, and 14. The objectives were to learn whether there is a difference between boys and girls with respect to the measurements and their rate of change over time. This classic example is used by many authors discussing longitudinal data methods. 
+
+The data set is available as `dentalstudy.txt`.
+
+|Variable        |Value     |Description                                                      |
+|:---------------|:---------|:----------------------------------------------------------------|
+|id              |Numeric   |Subject ID                                                       |
+|gender          |Character |"F" for female, "M" for male                                     |
+|distance_age8   |Numeric   |Measurement at age 8                                             |
+|distance_age10  |Numeric   |Measurement at age 10                                            |
+|distance_age12  |Numeric   |Measurement at age 12                                            |
+|distance_age14  |Numeric   |Measurement at age 14                                            |
+
+
+## Example 1: Study of dental growth {.smaller}
+
+```{r}
+#| echo: TRUE
+
+dental <- read.table(here("datasets", "dentalstudy.txt"), header = TRUE)
+head(dental)
+tail(dental)
+```
+* Subject: $i=1,...,27$ ($N=29$)
+* Observations: $j=1,2,3,4$, $n_{i}=4$ for all $i$
+* Total sample size: $\sum_{i=1}^{29}n_{i} = 29 \times 4 = 116$
+* This data set is in a **wide** format
+
+## Data format {.smaller}
+
+#### Wide (One row per each patient $i$)
+
+* Many prefer this format for data collection
+* Easier to eyeball trend
+* Only useful for **balanced data** with one type of response and time-independent covariates
+
+#### Long (One row per each observation $j$)
+
+* Most software require this format for analysis
+* Good for multiple response variables
+* Good for time-dependent covariates
+* Good for unbalanced data
+* Difficult to observe patterns
+
+## Wide to Long Data format {.smaller}
+```{r}
+#| echo: TRUE
+library(dplyr)
+dentallong <- dental %>%
+  pivot_longer(cols = starts_with("distance"),
+               names_to = "age",
+               # this removes "distance_age" from the values
+               names_prefix = "distance_age", 
+               values_to = "distance",
+  ) %>%
+  # convert age to numeric
+  mutate(age = as.numeric(age)) %>%
+  # create new variable indicating measurement occasion
+  group_by(id) %>%
+  mutate(time = row_number()) %>%
+  ungroup()
+dentallong
+```
+
+## Discriptive analysis {.smaller}
+::: {.column width="49%"}
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+library(kableExtra)
+dentallong %>% 
+  group_by(gender, age) %>% 
+  summarise(n = n_distinct(id),
+            meandist = mean(distance), 
+            sddist = sd(distance)) %>%
+  kable(digits = 2,
+        col.names = c("Gender", "Age", 
+                      "N", "Mean", "SD"),
+        caption = "Descriptive statistics of 
+        distance (mm) from center of pituitary 
+        gland to pteryomaxillary fissure by 
+        gender and age") 
+```
+:::
+
+::: {.column width="49%"}
+```{r}
+#| echo: FALSE
+#| eval: TRUE
+library(kableExtra)
+dentallong %>% 
+  group_by(gender, age) %>% 
+  summarise(n = n_distinct(id),
+            meandist = mean(distance), 
+            sddist = sd(distance)) %>%
+  kable(digits = 2,
+        col.names = c("Gender", "Age", "N", "Mean", "SD"),
+        caption = "Descriptive statistics of distance (mm) 
+        from center of pituitary gland to pteryomaxillary 
+        fissure by gender and age") 
+```
+:::
+
+## Data visualization {.smaller}
+
+#### Violin plots with boxplots
+
+```{r}
+#| echo: TRUE
+
+dentallong %>%
+  ggplot(aes(x = as.factor(age), y = distance, color = gender)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1) + 
+    labs(y = "Distance", x = "Age", color = "Gender")
+```
+## Data visualization {.smaller}
+
+#### Spaghetti plot
+
+```{r}
+#| echo: TRUE
+
+dentallong %>%
+  ggplot(aes(x = age, y = distance, color = gender)) +
+  geom_point(size = 1.5) +    # draw points
+  geom_line(aes(group = id)) +  # draw a line across each patient
+  labs(y = "Distance", x = "Age", color = "Gender")
+```
+
+
+## Data visualization {.smaller}
+
+#### Scatterplot with mean trajectory
+
+```{r}
+#| echo: TRUE
+
+dentallong %>%
+  ggplot(aes(x = age, y = distance, color = gender)) +
+  geom_point(size = 1.5) +    
+  # add mean trajectory for each treatment group
+  stat_summary(aes(group = gender), fun = mean, geom="line") + 
+  labs(y = "Distance", x = "Age", color = "Gender")
+```
+
+# Analysis of longitudinal data
+
+### Modeling mean response
+
+
+
+### Modeling covariance
+
+
+## General Linear Model
+
+#### Linear trend over time
+
+* The **simplest** possible curve for describing changes in the mean response over time is a **straight line**
+* In this model the **slope** for time has a direct interpretation in terms of a **constant change** in the mean response for a single-unit change in time
