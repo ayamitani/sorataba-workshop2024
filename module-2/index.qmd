@@ -138,3 +138,106 @@ $$
 * The GEE are functions of both $\beta$ and $\alpha$
 * The GEE have no closed-form solution (except for the identity link function)
 * Finding the solution for $\beta$ requires an **iterative algorithm** (e.g. Fisher's scoring algorithm)
+
+## Estimation of $\phi$ and $\alpha$ {.smaller}
+
+* Method to estimate ($\phi, \alpha$) is still a developing field
+* Two methods that are widely adoped are:
+  + Moment based estimation -- used in R package `gee`
+  + Estimating equations for $\alpha$ -- used in R package `geeglm`
+
+## Properties of $\hat \beta$ {.smaller}
+
+* $\hat \beta$ is a consistent estimator of $\beta$ (bias of $\hat \beta$ decreases to zero as the sample size increases) even if the working covariance model does not correspond to the true covariance model
+  + $\hat \beta$ is **robust** to misspecification of the variance-covariance structure (in large samples, at least)
+* Selecting a working covariance model that is *close* to the true covariance model will yield a more **efficient** estimator
+
+The expression for $\widehat{\text{Cov}}(\hat\beta)$ is given by
+
+$$
+\small\left(\sum_{i=1}^{N}\hat D_{i}^{T}\hat V_{i}^{-1}\hat D_{i}\right)^{-1}
+\left\{\sum_{i=1}^{N}\hat D_{i}^{T}\hat V_{i}^{-1}(Y_{i}-\hat\mu_{i})(Y_{i}-\hat\mu_{i})^{T}\hat V_{i}^{-1}\hat D_{i}\right\}
+\left(\sum_{i=1}^{N}\hat D_{i}^{T}\hat V_{i}^{-1}\hat D_{i}\right)^{-1}
+$$
+This is known as the **empirical** or **sandwich** estimator.
+
+
+## Sandwich estimator of $\text{Cov}(\hat\beta)$ {.smaller}
+
+* The sandwich estimator provides **valid standard errors** even when the assumed model for the covariances among the repeated measures is incorrect
+* With **large sample sizes**, the sandwich estimator of $\text{Cov}(Y_{i})$ yields correct standard errors
+* For this reason, the SEs from the sandwich estimator is often referred to as the **robust** standard errors (or **empirical** standard errors)
+
+So why bother modeling the within-subject association (specifying the working covariance matrix)???
+
+1. The closer the working covariance matrix approximates the true underlying covariance matrix, the greater the **efficiency** or **precision** with which $\beta$ can be estimated
+2. The robustness property of the sandwich estimator is a **large sample** property
+
+## Example: Respiratory study {.smaller}
+
+The data are from a clinical trial of patients with respiratory illness, where 111 patients from two different clinics were randomized to receive either placebo or an active treatment. Patients were examined at baseline and at four visits during treatment. At each
+examination, respiratory status (categorized as 1 = good, 0 = poor) was determined. 
+
+|Variable   |Value    |Description                                                    |
+|:----------|:--------|:--------------------------------------------------------------|
+|clinic     |Numeric  |Clinic ID                                                      |
+|id         |Numeric  |Subject ID                                                     |
+|trt        |Numeric  |Treatment (A=Active, P=Placebo)                                |
+|y0         |Numeric  |Baseline Response                                              |
+|y1         |Numeric  |Visit 1 Response                                               |
+|y2         |Numeric  |Visit 2 Response                                               |
+|y3         |Numeric  |Visit 3 Response                                               |
+|y4         |Numeric  |Visit 4 Response                                               |
+
+Table: Data dictionary of data from respiratory study
+
+## Example: Respiratory study {.smaller}
+```{r}
+#| echo: TRUE
+
+resp <- read.table(here("datasets", "respir.txt"), header = TRUE)
+head(resp)
+length(unique(resp$id))
+```
+This data set is in a **wide** format.
+
+## Example: Respiratory study{.smaller}
+```{r}
+#| echo: TRUE
+respl <- resp %>%
+  pivot_longer(cols = starts_with("y"),
+               names_to = "visit",
+               names_prefix = "y",
+               values_to = "resp") %>%
+  mutate(visit = as.numeric(visit),
+         trt1 = ifelse(trt == "A", 1, 0),
+         clinic2 = ifelse(clinic == 2, 1, 0))
+head(respl, 20)
+```
+
+
+## Example: Descriptive analysis
+Baseline data by clinic and treatment
+```{r}
+#| echo: TRUE
+respl %>%
+  filter(visit == 0) %>%
+  group_by(clinic, trt) %>%
+  summarise(avgresp = mean(resp))
+```
+
+
+## Example: Descriptive analysis{.smaller}
+Plot the data by clinic
+```{r}
+#| echo: TRUE
+respl %>%
+  group_by(visit, trt, clinic) %>%
+  mutate(pcty = mean(resp)) %>%
+  ggplot(aes(y = pcty, x = visit, color = as.factor(trt))) +
+  geom_point(size = 2.5) + 
+  geom_line(size = 1.5) + 
+  facet_grid(~clinic) + 
+  ylim(0,1) + 
+  labs(y = "Percent of good respiratory status", x = "Visit", color = "Treatment")
+```
