@@ -7,6 +7,7 @@ format:
     transition: fade
     background-transition: fade
     highlight-style: ayu-mirage
+    embed-resources: true
 ---
 
 ```{r}
@@ -191,7 +192,7 @@ examination, respiratory status (categorized as 1 = good, 0 = poor) was determin
 
 Table: Data dictionary of data from respiratory study
 
-## Example: Respiratory study {.smaller}
+## Example: Respiratory study
 ```{r}
 #| echo: TRUE
 
@@ -228,7 +229,7 @@ respl %>%
 
 
 ## Example: Descriptive analysis{.smaller}
-Plot the data by clinic
+Percent of good respiratory status over time by clinic
 ```{r}
 #| echo: TRUE
 respl %>%
