@@ -16,6 +16,7 @@ library(tidyverse)
 library(geepack)
 library(lme4)
 library(kableExtra)
+library(gtsummary)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
@@ -179,6 +180,8 @@ So why bother modeling the within-subject association (specifying the working co
 The data are from a clinical trial of patients with respiratory illness, where 111 patients from two different clinics were randomized to receive either placebo or an active treatment. Patients were examined at baseline and at four visits during treatment. At each
 examination, respiratory status (categorized as 1 = good, 0 = poor) was determined. 
 
+::: {style="font-size: 75%;"}
+
 |Variable   |Value    |Description                                                    |
 |:----------|:--------|:--------------------------------------------------------------|
 |clinic     |Numeric  |Clinic ID                                                      |
@@ -191,6 +194,8 @@ examination, respiratory status (categorized as 1 = good, 0 = poor) was determin
 |y4         |Numeric  |Visit 4 Response                                               |
 
 Table: Data dictionary of data from respiratory study
+
+:::
 
 ## Example: Respiratory study
 ```{r}
@@ -363,7 +368,6 @@ No interaction model with various working covariances
 ::: {.column width="49%"}
 ```{r}
 #| echo: TRUE
-#| eval: FALSE
 model3un <- geeglm(resp ~ trt1 + visit + clinic2,
                  id = id,
                  family = binomial(link = "logit"),
@@ -388,14 +392,273 @@ model3ar1 <- geeglm(resp ~ trt1 + visit + clinic2,
 
 :::
 
-## Model covariance
+## Model covariance{.smaller}
 
 ```{r}
-summary(model3un)$coef
-summary(model3un)$corr
-summary(model3ex)$coef
-summary(model3ex)$corr
-summary(model3ar1)$coef
-summary(model3ar1)$corr
+#| results: asis
+
+tblun <- model3un %>%
+  tbl_regression(exponentiate = TRUE)
+tblex <- model3ex %>%
+  tbl_regression(exponentiate = TRUE)
+tblar1 <- model3ar1 %>%
+  tbl_regression(exponentiate = TRUE)
+
+
+# merge tables
+tbl_merge_ex1 <-
+  tbl_merge(
+    tbls = list(tblun, tblex, tblar1),
+    tab_spanner = c("**Unstructured**", "**Exhangeable**", "**AR1**")
+  ) %>%
+  modify_header(label = "**Variable**")
+tbl_merge_ex1
 ```
 
+```{r}
+#| echo: TRUE
+
+t(summary(model3un)$corr["Estimate"])
+summary(model3ex)$corr["Estimate"]
+summary(model3ar1)$corr["Estimate"]
+QICun <- QIC(model3un)[1]; QICex <- QIC(model3ex)[1]; QICar1 <- QIC(model3ar1)[1]
+round(c(QICun, QICex, QICar1),3)
+```
+## Working corr with OR parameterization{.smaller}
+
+* Is modeling the association between two binary responses with a correlation coefficient inappropriate?
+* We can model the **within-subject** association between the **two responses** in terms of a common log odds ratio, $\alpha$,
+$$
+\begin{aligned}
+\text{logOR}(Y_{i1}, Y_{i2})&=\text{log}\left\{\frac{\Pr(Y_{i1}=1,Y_{i2}=1)\Pr(Y_{i1}=0,Y_{i2}=0)}{\Pr(Y_{i1}=1,Y_{i2}=0)\Pr(Y_{i1}=0,Y_{i2}=1)}\right\} \\
+&= \alpha
+\end{aligned}
+$$
+
+* Odds ratio parameterization for exchangeable working correlation
+```{r}
+#| echo: TRUE
+
+modelOR <- ordgee(ordered(resp) ~ trt1 + visit + clinic2, 
+                  id = id, 
+                  mean.link = "logit", 
+                  corstr = "exchangeable",
+                  data = respl)
+```
+
+
+## Comparison
+
+::: {.column width="50%"}
+Correlation parameterization
+```{r}
+summary(model3ex)$coef[,1:2]
+summary(model3ex)$corr
+```
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="40%"}
+OR parameterization
+```{r}
+summary(modelOR)$mean[,1:2]
+summary(modelOR)$cor[,1:2]
+```
+
+:::
+
+
+#### Interpretation{.smaller}
+
+::: {style="font-size: 75%;"}
+* The log odds of good respiratory status for the treatment group compared to the placebo group is $0.79$ ($\text{OR (95% CI)}=2.21 (1.24, 3.92)$)
+* The log odds of good respiratory status for patients in clinic 2 compared to clinic 1 is $0.92$ ($\text{OR (95% CI)}=2.51 (1.41, 4.47)$)
+
+:::
+
+
+
+## Ex: Clinical trial of antibiotics for leprosy{.smaller}
+
+* The dataset consists of **count** data from a placebo-controlled clinical trial of 30 patients with leprosy at the Eversley Childs Sanitorium in the Philippines
+* Participants in the study were randomized to either of two antibiotics (denoted treatment drug A and B) or to a placebo (denoted treatment drug C)
+* Prior to receiving treatment, baseline data on the number of leprosy bacilli at six sites of the body where the bacilli tend to congregate were recorded for each patient
+* After several months of treatment, the number of leprosy bacilli at six sites of the body were recorded a second time
+* The outcome variable is the total **count** of the number of leprosy bacilli at the six sites
+* In this study, the question of main scientific interest is whether treatment with antibiotics (drugs A and B) reduces the abundance of leprosy bacilli at the six sites of the body when compared to placebo (drug C)
+
+
+## Ex: Clinical trial of antibiotics for leprosy{.smaller}
+```{r}
+#| echo: TRUE
+lepr <- read.table(here("datasets", "leprosy.txt"), header = TRUE)
+head(lepr, 20)
+```
+
+
+## Ex: Clinical trial of antibiotics for leprosy{.smaller}
+
+Convert to long format
+```{r}
+#| echo: TRUE
+
+leprl <- lepr %>%
+  pivot_longer(cols = starts_with("y"),
+               names_to = "time",
+               names_prefix = "y",
+               values_to = "count") %>%
+  mutate(time = as.numeric(time) - 1, # time = 0 at baseline, time = 1 post-treatment
+         # create dummy variables with drug C as ref category
+         drugA = ifelse(drug == "Drug A", 1, 0), 
+         drugB = ifelse(drug == "Drug B", 1, 0),
+         # create drug x time interaction variables 
+         timeA = time * drugA,
+         timeB = time * drugB)
+```
+
+## Ex: Descriptive statistics{.smaller}
+```{r}
+#| echo: TRUE
+leprl %>%
+  group_by(drug, time) %>%
+  summarise(meancount = mean(count), varcount = var(count))
+
+```
+* Descriptive statistics show that the variance is substantially greater than the mean at each time point for all three groups
+* The Poisson assumption of $\text{Var}(Y_{ij}) = \mu_{ij}$ is not appropriate
+* Instead, we consider
+$$
+\text{Var}(Y_{ij}) = \phi\mu_{ij}
+$$
+and estimate $\phi >1$ from the data (*Overdispersion factor*)
+
+
+## Ex: Marginal model with log link{.smaller}
+First, we will fit the following marginal model
+$$
+\small\text{log}E(Y_{ij})=\text{log}\mu_{ij} = \beta_{1} + \beta_{2}\text{Time}_{ij} + \beta_3\text{Time}_{ij} \times \text{DrugA}_{i} + \beta_4\text{Time}_{ij} \times \text{DrugB}_{i} 
+$$
+where 
+
+* $Y_{ij}$ is the count of the number of leprosy bacilli for the $i$th patient in the $j$th occasion ($j = 1,2$)
+* $\text{DrugA}_{i} = 1$ if patient was randomized to receive Drug A and $0$ otherwise
+* $\text{DrugB}_{i} = 1$ if patient was randomized to receive Drug B and $0$ otherwise
+* $\text{Time}_{ij} = 1$ for post-treatment measurement occasion and $0$ for baseline
+* Because patients were **randomized**, we omit the main effects of treatment
+* The working correlation matrix is $2 \times 2$ with
+$$
+\text{Corr}(Y_{i1}, Y_{i2}) = \alpha
+$$
+
+## Ex: Marginal model with log link{.smaller}
+```{r}
+#| echo: TRUE
+modfit <- geeglm(count ~ time + timeA + timeB, data=leprl, 
+                 id = id, 
+                 family=poisson("log"), 
+                 corstr="exch")
+summary(modfit)
+```
+
+<br>
+
+## Interpretation {.smaller}
+
+* The expected count of leprosy bacilli at baseline in the placebo group is $e^{\beta_{1}} = e^{2.37} = 10.73$
+* The expected count of leprosy bacilli at follow-up in the placebo group is $e^{\beta_{1}} = e^{2.37} = 10.73$
+<!-- <div class = "green"> -->
+<!-- `r text_spec("Question 2", color = "#095427", bold = T)` -->
+<!-- <br> -->
+<!-- What is the expected count of leprosy bacilli at **follow-up** in the placebo group? -->
+
+<!-- a) 6.10 -->
+<!-- b) 6.52 -->
+<!-- c) 10.70 -->
+
+* $e^{\beta_2}=0.997$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in the placebo group
+* $e^{\beta_2+\beta_{3}}$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug A
+* $e^{\beta_2+\beta_{4}}$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug B
+
+
+
+## Hypothesis testing {.smaller}
+The coefficients $\beta_{3}$ and $\beta_{4}$ represent the difference between the changes in the log expected rates, comparing drug A and B to the placebo. 
+
+Does treatment with antibiotics significantly reduce the abundance of leprosy bacilli?
+
+$$
+\text{H}_{0}: \beta_{3} = \beta_{4} = 0
+$$
+Let $\hat\beta = (\hat\beta_{3}, \hat\beta_{4})^{T}$. Then, the **multivariate Wald statistics** for the above hypothesis is
+$$
+W^{2} = \hat\beta\left\{\text{Cov}(\hat\beta)\right\}^{-1}\hat\beta
+$$
+which has a $\chi^{2}$ distribution with $2$ degrees of freedom.
+```{r}
+### multivariate Wald statistic for H0:beta12=beta13=0
+ABest <- summary(modfit)$coeff[3:4,1]
+ABest
+ABvcov <- vcov(modfit)[3:4,3:4]
+ABvcov
+wald <- as.numeric(t(ABest) %*% solve(ABvcov) %*% (ABest))  
+waldp <- 1-pchisq(wald, df=2)
+c(wald, waldp)
+```
+
+The multivariate Wald statistic is $W^{2}=7.34$ with $2$ degrees of freedom ($p = 0.025$). This indicates that treatment with antibiotics is effective.
+
+
+## Hypothesis testing {.smaller}
+
+Are the two antibiotics equally effective?
+$$
+\text{H}_{0}: \beta_{3} = \beta_{4}
+$$
+The Wald statistic for the above hypothesis is
+$$
+W^{2} = \frac{(\beta_{3}-\beta_{4})^{2}}{\text{Var}(\beta_{3}-\beta_{4})}
+$$
+which has a $\chi^{2}$ distribution with $1$ degree of freedom.
+```{r}
+### wald statistic for H0:beta3=beta4
+waldnum <- ABest[1] - ABest[2]
+waldden <- ABvcov[1,1] + ABvcov[2,2] - 2 * ABvcov[1,2]
+waldstat <- waldnum^{2} / waldden
+waldstatp <- 1-pchisq(waldstat, df=1)
+c(waldstat, waldstatp)
+```
+Thus, we cannot reject the null hypothesis that the two antibiotics are equally effective in reducing the number of leprosy bacilli.
+
+## Ex: a more parsimonious model {.smaller}
+To obtain a common estimate of the log rate ratio, comparing both antibiotics (drugs A and B) to placebo, we can fit the reduced model
+
+$$
+\text{log}E(Y_{ij})=\text{log}\mu_{ij} = \beta_{1} + \beta_{2}\text{Time}_{ij} + \beta_3\text{Time}_{ij} \times \text{Trt}_{i}  
+$$
+
+```{r}
+leprl2 <- leprl %>%
+  # create a new indicator variable for treatment (either drug A or drug B)
+  mutate(trt = ifelse(drugA == 1 | drugB == 1, 1, 0),
+         # interaction variable between time and treatment
+         timetrt = time * trt)
+
+modfit2 <- geeglm(count ~ time + timetrt, data=leprl2, 
+                  id = id, 
+                  family=poisson("log"), 
+                  corstr="exch")
+summary(modfit2)
+```
+
+* The common estimate of the log rate ratio is $-0.528$
+* The rate ratio is $e^{-0.528}=0.59$ with 95% confidence interval, $0.40$ to $0.87$, indicating that treatment with antibiotics significantly reduces the average number of leprocy bacilli when compared to placebo
+
+
+
+
+## Example: Clustered data
+
+Clustered data 
