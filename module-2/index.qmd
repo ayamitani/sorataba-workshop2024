@@ -17,6 +17,7 @@ library(geepack)
 library(lme4)
 library(kableExtra)
 library(gtsummary)
+library(texreg)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
@@ -568,7 +569,7 @@ summary(modfit)
 ## Interpretation {.smaller}
 
 * The expected count of leprosy bacilli at baseline in the placebo group is $e^{\beta_{1}} = e^{2.37} = 10.73$
-* The expected count of leprosy bacilli at follow-up in the placebo group is $e^{\beta_{1}} = e^{2.37} = 10.73$
+* The expected count of leprosy bacilli at follow-up in the placebo group is $e^{\beta_{1}+\beta_2} = e^{2.37-0.003} = 10.70$
 <!-- <div class = "green"> -->
 <!-- `r text_spec("Question 2", color = "#095427", bold = T)` -->
 <!-- <br> -->
@@ -579,8 +580,8 @@ summary(modfit)
 <!-- c) 10.70 -->
 
 * $e^{\beta_2}=0.997$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in the placebo group
-* $e^{\beta_2+\beta_{3}}$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug A
-* $e^{\beta_2+\beta_{4}}$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug B
+* $e^{\beta_2+\beta_{3}} = 0.568$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug A
+* $e^{\beta_2+\beta_{4}} = 0.608$ is the rate ratio of leprosy bacilli, comparing follow-up period to baseline in drug B
 
 
 
@@ -597,8 +598,12 @@ $$
 W^{2} = \hat\beta\left\{\text{Cov}(\hat\beta)\right\}^{-1}\hat\beta
 $$
 which has a $\chi^{2}$ distribution with $2$ degrees of freedom.
+
+## Hypothesis testing {.smaller}
+Multivariate Wald statistic for $\text{H}_{0}: \beta_{3} = \beta_{4} = 0$
 ```{r}
-### multivariate Wald statistic for H0:beta12=beta13=0
+#| echo: TRUE
+
 ABest <- summary(modfit)$coeff[3:4,1]
 ABest
 ABvcov <- vcov(modfit)[3:4,3:4]
@@ -622,8 +627,11 @@ $$
 W^{2} = \frac{(\beta_{3}-\beta_{4})^{2}}{\text{Var}(\beta_{3}-\beta_{4})}
 $$
 which has a $\chi^{2}$ distribution with $1$ degree of freedom.
+
+## Hypothesis testing {.smaller}
+Wald statistics for $\text{H}_{0}: \beta_{3} = \beta_{4}$
 ```{r}
-### wald statistic for H0:beta3=beta4
+#| echo: TRUE
 waldnum <- ABest[1] - ABest[2]
 waldden <- ABvcov[1,1] + ABvcov[2,2] - 2 * ABvcov[1,2]
 waldstat <- waldnum^{2} / waldden
@@ -636,10 +644,11 @@ Thus, we cannot reject the null hypothesis that the two antibiotics are equally 
 To obtain a common estimate of the log rate ratio, comparing both antibiotics (drugs A and B) to placebo, we can fit the reduced model
 
 $$
-\text{log}E(Y_{ij})=\text{log}\mu_{ij} = \beta_{1} + \beta_{2}\text{Time}_{ij} + \beta_3\text{Time}_{ij} \times \text{Trt}_{i}  
+\text{log}E(Y_{ij})=\text{log}\mu_{ij} = \beta_{1} + \beta_{2}\text{Time}_{ij} + \beta_3\text{Time}_{ij} \times \text{Trt}_{i}
 $$
 
 ```{r}
+#| echo: TRUE
 leprl2 <- leprl %>%
   # create a new indicator variable for treatment (either drug A or drug B)
   mutate(trt = ifelse(drugA == 1 | drugB == 1, 1, 0),
@@ -650,8 +659,14 @@ modfit2 <- geeglm(count ~ time + timetrt, data=leprl2,
                   id = id, 
                   family=poisson("log"), 
                   corstr="exch")
+```
+
+## Ex: a more parsimonious model {.smaller}
+```{r}
+#| echo: TRUE
 summary(modfit2)
 ```
+
 
 * The common estimate of the log rate ratio is $-0.528$
 * The rate ratio is $e^{-0.528}=0.59$ with 95% confidence interval, $0.40$ to $0.87$, indicating that treatment with antibiotics significantly reduces the average number of leprocy bacilli when compared to placebo
@@ -659,6 +674,6 @@ summary(modfit2)
 
 
 
-## Example: Clustered data
+## Marginal models for clustered data {.smaller}
 
 Clustered data 
