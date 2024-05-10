@@ -1,0 +1,25 @@
+---
+title: "3)	Module 3: Mixed effects models"
+author: "Aya Mitani"
+format:
+  revealjs:
+    theme: theme.scss
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    embed-resources: true
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(gtsummary)
+library(texreg)
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
+```
+

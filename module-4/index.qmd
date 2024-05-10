@@ -1,0 +1,792 @@
+---
+title: "Module 4: Missing data and dropout in longitudinal studies"
+author: "Aya Mitani"
+format:
+  revealjs:
+    theme: theme.scss
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    embed-resources: true
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(nlme)
+library(lme4)
+library(geepack)
+library(kableExtra)
+library(gtsummary)
+library(texreg)
+library(JMbayes2)
+library(mice)
+library(survival)
+library(ggfortify)
+library(survminer)
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
+```
+
+## Missing responses in longitudinal studies {.smaller}
+
+* Except in highly controlled settings, missing data in longitudinal studies are inevitable
+* What are the implications for missing data?
+  + Create complications for methods that require **balanced** data
+  + Reduce the **precision** with which changes in the mean response over time can be estimated
+  + Can introduce **bias** and lead to misleading inferences about changes in the mean response
+* Statistical methods to account for missing data in correlated (longitudinal) data is still a rapidly developing field
+* Usually, the missing data mechanism is not under the control of the investigators
+* We make **assumptions** about the missing data mechanism
+* Validity of the analysis depends on whether these assumptions hold
+* We need to be **explicit** about the assumptions made regarding the reasons for missing data
+
+
+
+
+## Missing data notation {.smaller}
+
+Suppose we have $n$ repeated measurements of the same individual. Then, the $i$th subject's set of responses can be represented as a $n \times 1$ vector denoted by
+$$
+Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}.
+$$
+In the missing data literature, the response vector $Y_{i}$ is coupled with a $n \times 1$ vector of **response indicators**
+$$
+R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
+$$
+where $R_{ij} = 1$ if $Y_{ij}$ is observed and $R_{ij} = 0$ is $Y_{ij}$ is missing.
+
+Given $R_{i}$, we can **partition** $Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}$ into two components $Y_{i}^{O}$ and $Y_{i}^{M}$ where
+
+* $Y_{i}^{O}$ denotes the vector of **observed** responses for subject $i$
+* $Y_{i}^{M}$ denotes the vector of **missing** responses for subject $i$
+
+
+
+## Missing data pattern {.smaller}
+
+Largely, two types of missing data pattern exist in longitudinal studies:
+
+#### Monotone missing data pattern
+
+* Arises from **dropout** 
+* The term dropout refers to the special case where if $Y_{ik}$ is missing, then $Y_{ik+1},...,Y_{in}$ are also missing
+* Key question: Do individuals that dropout and those that remain in the study differ in any further relevant way?
+
+
+
+#### Intermittent (non-monotone) missing data pattern
+
+* Missing data pattern that is not monotone
+
+
+
+## Ex: Clinical trial of contracepting women {.smaller}
+
+* This is a longitudinal clinical trial of contracepting women
+* Women received an injection of either 100 mg or 150 mg of depot-mderoxyprogesterone acetate (DMPA) on the day of randomization and three additional injections at 90-day intervals
+* Final follow-up visit occurred at 90 days after the fourth injection (one year after the first injection)
+* Women completed menstrual diaries throughout the study
+* The outcome of interest was experience of amenorrhea, which is the absence of menstrual bleeding, in the four successive three-month intervals
+* There was substantial dropout in this clinical trial
+
+::: {style="font-size: 65%;"}
+|Variable        |Value     |Description                                                            |
+|:---------------|:---------|:----------------------------------------------------------------------|
+|id              |Numeric   |Subject ID                                                             |
+|trt             |Numeric   |Treatment dose (0 = 100mg, 1 = 150mg of DMPA)                               |
+|time            |Numeric   |1,2,3,4 for the four consecutive 90-day injection intervals            |
+|y               |Numeric   |Experience of amenorrhea                                               |
+:::
+
+## Ex: Clinical trial of contracepting women {.smaller}
+
+```{r}
+#| echo: TRUE
+
+amen <- read.table(here("datasets", "amenorrhea.txt"), header = TRUE)
+
+# change to wide format to use md.pattern() function from mice package
+amen %>% 
+  pivot_wider(names_from = time, 
+              names_prefix = "y",
+              values_from = y) %>%
+  dplyr::select(-id, -trt) %>%
+  md.pattern()
+```
+* Monotone missing data pattern
+* 714 women have complete responses
+* 198 women dropped out after the first visit
+* 155 women dropped out after the second visit
+* 84 women dropped out after the third visit
+
+```{r, echo = FALSE}
+amen <- amen %>%
+  mutate(time = time - 1,
+         time2 = time**2,
+         trt.time = trt * time,
+         trt.time2 = trt * time2)
+```
+
+
+
+
+
+
+
+## Missing data mechanism {.smaller}
+
+#### Missing completely at random (MCAR)
+
+* Probability that responses are missing is unrelated to both the set of observed responses ($Y_{i}^{O}$) and the value that should have been obtained ($Y_{i}^{M}$)
+* $\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i}) = \Pr(R_{i})$
+
+#### Missing at random (MAR)
+
+* Probability that responses are missing depends on the set of observed responses ($Y_{i}^{O}$) but is conditionally unrelated to the values that should have been obtained ($Y_{i}^{M}$)
+* $\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i}) = \Pr(R_{i}|Y_{i}^{O}, X_{i})$
+
+#### Missing not at random (MNAR) 
+
+* Probability that responses are missing depends on the set of observed responses ($Y_{i}^{O}$) and the values that should have been obtained ($Y_{i}^{M}$)
+* $\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i})$ or $\Pr(R_{i}|Y_{i}^{M}, X_{i})$
+
+
+* For **likelihood-based inference**, the crucial distinction is between MCAR/MAR and MNAR
+  - i.e. for likelihood-based methods, valid inferences can still be obtained even if data are MAR
+
+
+
+
+## Inverse probability weighting {.smaller}
+
+
+* Basic idea is to estimate the probability of individuals remaining (or dropping out) in the study and weigh each observation according to that probability
+  + Individuals with low probability of remaining in the study (high probability of dropping out) are given larger weights
+  + Individuals with high probability of remaining in the study (low probability of dropping out) are given smaller weights
+* IPW methods are more straightforward to implement with **monotone** missing data pattern
+* IPW methods are more appealing when a full likelihood-based analysis is not possible 
+  + i.e. marginal analysis with discrete responses
+  + IPW is often incorporated into **GEE**
+* Requires correct specification of the dropout model ($\Pr(R_{ij}=1|R_{i1}=\cdots R_{i,j-1}, X_{i}, Y_{i1},...,Y_{i,j-1})$)
+
+
+
+## IPW-GEE {.smaller}
+
+$$
+R_{i} = (R_{i1},...,R_{in})^{T}
+$$
+$$
+D_{i}=1+\sum_{j=1}^{n}R_{ij}
+$$
+For example,
+
+* an individual who completes the study with no missed visits will have $Y_{i} = (Y_{i1},...,Y_{in})^{T}$ and $D_{i}=n+1$
+* an individual who drops out after the third visit will have $Y^{O}_{i} = (Y_{i1},Y_{i2},Y_{i3})^{T}$ and $D_{i}=3+1=4$
+
+
+## IPW-GEE {.smaller}
+
+
+The IPW-GEE estimator is obtained as the solution to the following **weighted** estimating equations:
+
+$$
+\sum_{i=1}^{N}D_{i}^{T}V_{i}^{-1}W_{i}(Y_{i}-\mu)=0,
+$$
+where
+
+* $D_{i}$ is the $n \times p$ derivative matrix
+* $V_{i}$ is a $n \times n$ working covariance matrix for $Y_{i}$
+* $W_{i}$ is a $n \times n$ **diagonal** matrix of the occasion-specific weights, $w_{ij}$, for $j = 1,...,n$,
+$$
+W_{i}=
+\left(\begin{array}{cccc} 
+R_{i1}\times w_{i1} & 0 & ... & 0\\
+0 & R_{i2}\times w_{i2} & ... & 0\\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & ... & R_{in}\times w_{in}
+\end{array}\right)
+$$
+
+The weight, $w_{ij}$ is the inverse of the **unconditional** probability of being observed at the $j$th occasion.
+
+## IPW-GEE {.smaller}
+
+To calculate these weights, let $\pi_{ij}$ denote the **conditional** probability of the $i$th individual being observed (or not dropping out) at the $j$th occasion, given that this individual was observed at the prior occasions.
+
+For the first occasion we usually assume $R_{i1}=1$ for all individuals, and then $\pi_{i1}=1$.
+
+The MAR assumption implies that
+$$
+\pi_{ij}=\Pr(R_{ij}=1|R_{i1}= \cdots = R_{i,j-1}=1, Y_{i1}= \cdots = Y_{i,j-1}, X_{i}).
+$$
+
+The **unconditional** probability of being observed at the $j$th occasion can be expressed as the **cumulative product** of **conditional** probabilities,
+$$
+\pi_{i1} \times \pi_{i2} \times \cdots \times \pi_{ij}.
+$$
+The required weight is then given by the **inverse** of the cumulative product of conditional probabilities,
+$$
+w_{ij} = (\pi_{i1} \times \pi_{i2} \times \cdots \times \pi_{ij})^{-1}.
+$$
+
+
+
+## Estimation of weights {.smaller}
+
+We can estimate $\pi_{ij}$ by constructing a logistic regression model for $\pi_{ij}$:
+
+$$
+\begin{aligned}
+\text{logit}(\pi_{ij}) &= \text{logit}\left\{\Pr(R_{ij}=1|R_{i1}=\cdots=R_{i,j-1}=1,Z_{ij})\right\}\\
+&= Z_{ij}^{T}\theta
+\end{aligned}
+$$
+where $Z_{ij}$ is a $q \times 1$ design vector that incorporates:
+
+* certain components of $X_{ij}$ 
+* past responses ($Y_{i1},...,Y_{i,j-1}$)
+* possibly additional covariates that may be predictive of dropout but are not of subject-matter interest in the marginal model for the mean response
+
+
+
+## Assumptions {.smaller}
+
+* The missing data mechanism depends only on **variables fully observed** in the sample 
+* The probability of being observed ($\pi_{ij}$) is **positive** (not close to zero)
+  + If $\pi_{ij}$ is very small, $w_{ij}$ will be extremely large
+  + Extremely large weights on small subset of observations may yield regression parameter estimates that are unstable and have poor precision
+* Safest to assume working **independence** correlation
+  + Need robust standard errors using the sandwich variance estimator
+
+
+
+## Detailed approach with data from Clinical trial of contracepting women {.smaller}
+
+We are interested in modeling the **marginal** probability of amenorrhea:
+$$
+\text{logit}(\mu_{ij})=\beta_{1} + \beta_{2}t_{ij} + \beta_{3}t^{2}_{ij} + \beta_{4}\text{Dose}_{i} + \beta_{5}(t_{ij} \times \text{Dose}_{i})+ \beta_{6}(t^{2}_{ij} \times \text{Dose}_{i}) 
+$$
+
+* Because we are interested in modeling the marginal probability of a **discrete** (or more specifically, binary) outcome, we cannot employ ML methods
+* We need to fit a marginal model using GEE
+  - Estimates will be biased if data are MAR
+* Incorporate IPW
+
+
+
+## Model for dropout process {.smaller}
+
+* First, we will fit a model for the dropout process
+* The outcome is $\text{logit}(\pi_{ij}) = \text{logit}\left\{\Pr(R_{ij}=1)\right\}$
+  + Although it is called "dropout model", we are modeling the probability of **not** dropping out
+  + We don't include baseline data (everybody is observed)
+* The predictors include fully observed covariates and previously observed responses
+
+$$
+\text{logit}(\pi_{ij})=\theta_{1}+\theta_{2}I(t=2)+\theta_{3}I(t=3)+\theta_{4}\text{Dose}_{i}+\theta_{5}Y_{i,j-1}+\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}), \quad j = 1,2,3
+$$
+where $\pi_{ij}=\Pr(R_{ij}=1|R_{i1}= \cdots = R_{i,j-1}=1, Y_{i,j-1}, \text{Dose}_{i})$.
+```{r}
+# ipw
+ipwdat <- amen %>%
+  group_by(id) %>%
+  mutate(prevy = lag(y)) %>%
+  ungroup() %>%
+  mutate(r = ifelse(is.na(y), 0, 1),
+         t2 = ifelse(time == 2, 1, 0),
+         t3 = ifelse(time == 3, 1, 0),
+         trt.prevy = trt * prevy) %>%
+  filter(!is.na(y)|!is.na(prevy))  
+ipwdat
+
+# fit drop-out model
+r <- ipwdat$r
+xmat <- as.matrix(
+  cbind(rep(1, length(r)), ipwdat[,c("t2", "t3", "trt", "prevy", "trt.prevy")])
+  )
+rmod <- glm(r ~ xmat, family = binomial("logit"))
+summary(rmod)$coef
+dropcoef <- summary(rmod)$coef[,1]
+```
+
+
+
+* For individuals in the **low** dose group, the conditional odds of **dropout** is approximately 60% higher if they experienced amenorrhea at the previous occasion
+  + $\text{exp}(0.451)=1.57$
+* For individuals in the **high** dose group, the conditional odds of **dropout** is approximately two times higher if they experienced amenorrhea at the previous occasion
+  + $\text{exp}(0.451+0.238)=0.99$
+* For individuals in the **high** dose group, what is the conditional odds ratio of **dropout** if they experienced amenorrhea at the previous occasion?
+
+
+
+
+
+## Compute IPW
+
+First, compute the predicted $\text{logit}(\hat\pi_{ij})$ from the dropout model.
+$$
+\text{logit}(\hat\pi_{ij})=\hat\theta_{1}+\hat\theta_{2}I(t=2)+\hat\theta_{3}I(t=3)+\hat\theta_{4}\text{Dose}_{i}+\hat\theta_{5}Y_{i,j-1}+\hat\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}) 
+=Z_{ij}^{T}\hat\theta
+$$
+```{r}
+ipwdat <- ipwdat %>%
+  mutate(logitp = as.numeric(xmat %*% dropcoef))
+```
+
+Then, compute the predicted $\hat\pi_{ij}$.
+
+$$
+\hat\pi_{ij} = \frac{\text{exp}(Z_{ij}^{T}\hat\theta)}{1+\text{exp}(Z_{ij}^{T}\hat\theta)}
+$$
+```{r}
+ipwdat <- ipwdat %>%
+  mutate(logitp = as.numeric(xmat %*% dropcoef),
+         phat = ifelse(time == 0, 1, exp(logitp) / (1 + exp(logitp))))
+```
+
+Finally, compute the visit-specific IPW as
+
+$$
+\hat w_{ij} = (\hat\pi_{i1} \times \hat\pi_{i2} \times \cdots \hat\pi_{ij})^{-1}.
+$$
+Because the first response was fully observed, with $R_{ij}=1$ for all individuals, $\hat\pi_{i1} = 1$ by definition.
+```{r}
+ipwdat <- ipwdat %>%
+  mutate(logitp = as.numeric(xmat %*% dropcoef),
+         phat = ifelse(time == 0, 1, exp(logitp) / (1 + exp(logitp)))) %>%
+  group_by(id) %>%
+  mutate(cumprob = cumprod(phat),
+         ipw = 1/cumprob) %>%
+  ungroup() 
+
+ipwdat %>%
+  filter(id %in% c(100, 200, 400, 1000)) %>%
+  dplyr::select(id, trt, time, y, prevy, r, logitp, phat, cumprob, ipw) %>%
+  print()
+```
+
+## Compute IPW {.smaller}
+
+Prior to conducting an IPW-GEE analysis, we should examine the **distribution** of the estimated weights for any presence of discernibly large weights.
+
+```{r}
+# examine the weights by time point
+ipwdat %>%
+  filter(r == 1) %>%
+  ggplot(aes(y = ipw, x = as.factor(time))) +
+  geom_boxplot() + 
+  labs(y = "IPW", x = "Occasion")
+```
+
+* $\hat w_{i1}=1$ for all individuals, as should be
+* Estimated weights are increasing over time
+* Estimated weights range from 1.0 to 2.1 $\rightarrow$ no concern that a small subset of the observations might have undue influence on the analysis
+
+
+
+
+
+
+## Model for response with IPW {.smaller}
+
+Finally, we will fit a logistic regression model for the marginal probability of amenorrhea:
+$$
+\text{logit}(\mu_{ij})=\beta_{1} + \beta_{2}t_{ij} + \beta_{3}t^{2}_{ij} + \beta_{4}\text{Dose}_{i} + \beta_{5}(t_{ij} \times \text{Dose}_{i})+ \beta_{6}(t^{2}_{ij} \times \text{Dose}_{i}) 
+$$
+
+* Use `wights=` option in `geeglm`
+* To ensure that the weights are appropriately incorporated, we need to make the **"working independence"** assumption for the within-subject association among the responses
+* Because a "working independence" assumption is made, standard errors are based on the **sandwich variance** estimator
+  + Default for `geeglm`
+
+```{r}
+# ipw-gee
+ipwgee <- geeglm(y ~ trt + time + time2 + trt.time + trt.time2, 
+                 family = binomial("logit"),
+                 id = id, scale.fix = TRUE,
+                 corstr = "independence",
+                 weights = ipw,
+                 data = ipwdat)
+summary(ipwgee)
+```
+
+## Comparison {.smaller}
+
+* We will compare $\hat\beta_{5}$ and $\hat\beta_{6}$ from **four** different analyses
+  + Complete-case analysis 
+  + Available data analysis
+  + Last observation carried forward
+  + IPW
+
+
+```{r}
+# complete cases (remove women who dropout)
+ccdat <- amen %>%
+  group_by(id) %>%
+  mutate(dropout = ifelse(is.na(mean(y)), 1, 0)) %>%
+  ungroup() %>%
+  filter(dropout == 0) 
+
+ccgee <- geeglm(y ~ trt + time + time2 + trt.time + trt.time2, 
+         family = binomial("logit"),
+         id = id, scale.fix = TRUE,
+         corstr = "unstructured",
+         data = ccdat)
+
+
+# available data
+avdat <- amen %>%
+  drop_na()
+avgee <- geeglm(y ~ trt + time + time2 + trt.time + trt.time2, 
+                family = binomial("logit"),
+                id = id, scale.fix = TRUE,
+                corstr = "unstructured",
+                data = avdat)
+
+
+# last value carried forward
+lvcfdat <- amen %>%
+  group_by(id) %>%
+  fill(y) %>%
+  ungroup()
+lvcfgee <- geeglm(y ~ trt + time + time2 + trt.time + trt.time2, 
+                  family = binomial("logit"),
+                  id = id, scale.fix = TRUE,
+                  corstr = "unstructured",
+                  data = lvcfdat)
+
+```
+
+
+```{r, echo = FALSE}
+combine_ests <- function(modout){
+  ests <- sprintf('%.3f', coef(summary(modout))[5:6,1])
+  ses <- paste0("(", sprintf('%.3f', coef(summary(modout))[5:6,2]),")")
+  out <- c(rbind(ests, ses))
+  return(out)
+}
+cc.out <- c(nrow(ccdat), combine_ests(ccgee))
+av.out <- c(nrow(avdat), combine_ests(avgee))
+lvcf.out <- c(nrow(avdat), combine_ests(lvcfgee))
+ipw.out <- c(nrow(avdat), combine_ests(ipwgee))
+variable <- c("Effective number of obs",  "Time x Dose", "", "Time^2 x Dose", "")
+as.data.frame(cbind(variable, cc.out, av.out, lvcf.out, ipw.out)) %>% 
+  kbl(col.names = c("Variable", "Complete-case", "Available data", "Last value carried fwd", "IPW"), caption = "Estimated regression coefficients (standard errors) from logistic regression analysis", align = "c") %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+
+
+
+## Summary {.smaller}
+
+* IPW is useful if only the response variables are missing due to dropout
+* IPW requires correct specification of the dropout model for valid estimation of $\beta$
+* In the presence of discernibly large weights, 
+  + Check the sensitivity of results to the inclusion of observations that receive large weights
+  + If the analysis results are sensitive to a small number of large weights, then
+    - apply weight truncation
+    - rebuild a new dropout model
+    - or consider an alternative methods of adjusting for missingness 
+
+
+
+
+# Joint models (JM) for longitudinal and time-to-event data
+
+
+
+## Motivation {.smaller}
+
+- In longitudinal follow-up studies, **missing data** is inevitable
+  + Subjects drop out or do not adhere to scheduled visit times
+  + Monotone or intermittent missing data
+- When the probability of a subject dropping out depends on their unobserved longitudinal measurements, then the dropout process is defined as **missing not at random** or **informative**
+  + This process cannot be ignored (**nonignorable**), and valid inferences can only be made based on a joint distribution of the longitudinal measurements and the missingness process
+- JM provides a solution to both problems: **endogeneity** and **informative missingness**
+  + The relative risk model for the time-to-event outcome depends on the true underlying values of the longitudinal outcome
+  + The estimation is based on the joint distribution of the two outcomes
+
+
+  
+## General concepts of JM {.smaller}
+
+- JMs are applicable in settings where subjects are **followed-up over time**
+  + e.g. to monitor the progress of a disease or medical condition
+- The **progression** of the disease or condition is typically evaluated via repeated measurements of a biomarker
+  + e.g. CD4 cell counts in HIV patients
+- It is also of scientific interest to determine the effect of such a biomarker on the **time to an event** of interest
+  + e.g. death or development of cancer
+- The biomarker measurements are **endogenous** or **internal**: the value at any given time point is dependent on the occurrence of the event prior to that time point
+- They are usually **measured with error** and the value is only known for the specific time points at which it is measured
+
+
+
+
+## The standard joint model {.smaller}
+
++ To account for the special features of endogenous time-varying covariates a new class of models has been developed
+  - Joint models for longitudinal and time-to-event data
++ Intuitive ideas behind JM
+  - Use an appropriate model to describe the **evolution** of the time-dependent covariate for each patient over time while taking into account the **complex time functions** and  **measurement errors**
+  - The **estimated evolution** are then used in a Cox model 
+  - The time-dependent covariate is not assumed constant between visits
+
+
+
+## Notations for the standard JM {.smaller}
+
++ $T_i^{*}$: **True** event time for subject $i$
++ $T_i$: **Observed** event time for subject $i$
++ $\delta_i$: Event indicator 
++ $y_i(t)$: Longitudinal response for subject $i$ at time $t$
+  - Note that we do not actually observe $y_i(t)$ for any time $t$, but rather only at the very specific occasions $t_{ij}$ at which measurements were taken
+  - The **observed** longitudinal data consist of measurements $y_{ij}=\{y_i(t_{ij}), j=1,...,n_i\}$
+
+
+
+
+## The survival submodel {.smaller}
+
++ Our aim is to measure the association between the longitudinal marker level and the risk for an event
++ We introduce $m_i(t)$ that denotes the **true** and **unobserved** value of the longitudinal outcome at $t$
+  - $m_i(t) \neq y_i(t)$ because $y_i(t)$ is **observed** and contaminated with measurement error
++ Then, to quantify the strength of association between $m_i(t)$ and the risk for an event, we define the hazard model
+$$
+h_i(t|\mathcal{M}_i(t)) = h_0(t)\exp\{\gamma^{T}w_i+\alpha m_i(t)\}
+$$
+where
+  - $\mathcal{M}_i(t) = \{m_i(s), 0 \leq s \le t\}$ is the longitudinal history 
+  - $\alpha$ quantifies the strength of association between $m_i(t)$ and the risk for an event
+  - $w_i$ are the baseline covariates
+  
+
+  
+## The longitudinal submodel {.smaller}
+
++ We need to **estimate** $m_i(t)$ and reconstruct the complete longitudinal history $\mathcal{M}_i(t)$ for each subject
++ Use the **observed** longitudinal response $y_i(t)$ in a linear mixed effects model
+$$
+\begin{aligned}
+y_i(t) &= m_i(t) + \epsilon_i(t) \\
+&= x_i^{T}(t)\beta + z_i^{T}(t)b_i + \epsilon_i(t), \qquad \epsilon_i(t) \sim \mathcal{N}(0, \sigma^2) 
+\end{aligned}
+$$
+where
+  - $x_i(t)$ and $\beta$ account for the fixed part of the model
+  - $z_i(t)$ and $b_i$ account for the random part of the model with $b_i \sim \mathcal{N}(0,D)$
+
+- The mixed effects model accounts for the measurement error problem by postulating that $y_i(t)$ equals $m_i(t)$ plus a random error term ($\epsilon_i(t)$)
+- The time structure in $x_i(t)$ and $z_i(t)$, and the **subject-specific random effects** ($b_i$) allows to reconstruct the complete path of $\mathcal{M}_i(t)$
+- It is important to obtain a good estimate of $\mathcal{M}_i(t)$
+  + The longitudinal submodel can be quite complex
+
+
+
+
+## The joint model {.smaller}
++ Finally, the two submodels are associated by defining a model for their **joint distribution**
+
+$$
+p(y_i, T_i, \delta_i) = \int p(y_i|b_i)\{h(T_i|b_i)^{\delta_i}S(T_i|b_i)\}p(b_i)db_i
+$$
+where
+
++ $b_i$ is a vector of random effects that explains the interdependencies
+  - **between** the longitudinal and time-to-event process
+  - **within** the longitudinal process
++ $p(\cdot)$ is the density function
++ $S(\cdot)$ is the survival function
+
+
+
+
+## Assumptions of JM {.smaller}
+
+* **Full conditional independence**
+  + random effects explain all interdependencies
+  + conditional on the random effects
+    - the longitudinal outcome and the time-to-event outcome are independent
+    - the repeated measurements in the longitudinal outcome are independent of each other
++ The censoring and visiting processes are assumed **non-informative**
++ **Decision to withdraw** from the study or **to appear** at the next visit
+  - may depend on the **observed** past history
+  - no additional dependence on underlying, latent subject characteristics associated with prognosis
+  
+
+
+## Example: AIDS data {.smaller}
+
+- Study participants: 467 HIV infected patients who had failed or were intolerant to zidovudine therapy (AZT) (Abrams et al., NEJM, 1994)
+- Primary aim: to compare the efficacy and safety of two alternative antiretroviral drugs, didanosine (ddI) and zalcitabine (ddC) in time to death
+  + 230 patients randomized to ddI and 237 to ddC
+- Our focus: to study the association between CD4 cell counts and the risk for death
+  + Time-to-event outcome: time to death
+  + Longitudinal outcome: CD4 cell counts measured at baseline, 2, 6, 12, 18 months
+
+
+
+## Data structure {.smaller}
+
++ There are two types of AIDS data set in the `JM` package
+```{r}
+library(JM)
+data(aids)
+data(aids.id)
+```
+
+
++ `aids.id`
+  - A data frame with 467 observations and 12 variables
+  - One observation for each patient
+  - Contains the first CD4 cell count measurement for each patient
+  - Used to fit the **survival submodel**
+  
+```{r}
+head(aids.id, 20)
+```
+
+
+```{r}
+aids.km <- survfit(Surv(Time, death) ~ drug, data = aids.id)
+
+ggsurvplot(
+  aids.km,
+  data = aids.id,
+  size = 1,                          # change line size
+  palette = c("#E7B800", "#2E9FDF"), # custom color palettes
+  conf.int = TRUE,                   # Add confidence interval
+  pval = TRUE,                       # Add p-value
+  legend.labs = c("ddC", "ddI"),    # Change legend labels
+  ggtheme = theme_bw()               # Change ggplot2 theme
+)
+```
+
++ `aids`
+  - A data frame with 1405 observations and 12 variables
+  - Multiple observation for each patient
+  - Contains all CD4 cell count measurement for each patient
+  - Used to fit the **longitudinal submodel**
+  
+
+```{r}
+head(aids, 20)
+```
+
+
+
+
+
+```{r}
+AIDS.samp <- subset(aids, patient %in% c(82,152,213,236,332,
+                                         335,353,407,410,452))
+plot(CD4 ~ obstime, data = AIDS.samp, type = "n",
+     xlab = "Time (months)", ylab = expression(sqrt("CD4 Cell Count")))
+for (i in unique(AIDS.samp$patient))
+  lines(CD4 ~ obstime, data = AIDS.samp[AIDS.samp$patient == i, ],
+        lty = match(i, unique(AIDS.samp$patient)),
+        col = match(i, unique(AIDS.samp$patient)))
+```
+
+
+
+## Joint model of interest {.smaller}
+
+$$
+\begin{aligned}
+    y_{i}(t) &= \underbrace{\beta_0 +\beta_1t + \beta_2\{t \times \text{ddI}_i\}  + b_{i0} + b_{i1}t}_{m_{i}(t)} + \epsilon_{i}(t)
+\\
+h_{i}(t) &= h_{0}(t)\exp \{\gamma \text{ddI}_i +   \alpha m_{i}(t)\}  
+\end{aligned}
+$$
+
+
+```{r}
+#-------------------------------------
+# joint model with JM package
+#-------------------------------------
+
+# first, fit longitudinal submodel
+jmlong <- lme(CD4 ~ obstime + obstime:drug,
+              random = ~ obstime | patient,
+              data = aids)
+
+# next, fit survival submodel
+jmcox <- coxph(Surv(Time, death) ~ drug, x = TRUE,
+               data = aids.id)
+
+# finally, fit joint model with piecewise baseline hazard (other options are available)
+# jmaids <- jointModel(jmlong, jmcox, timeVar = "obstime",
+#                      method = "piecewise-PH-aGH")
+# summary(jmaids)
+```
+
+<div class = "blue">
+<a>**Interpretation of the survival model** </a> 
+
+* The hazard of death is 1.40 (95% CI: 1.03; 1.90) times higher among patients receiving ddI compared to patients receiving ddC
+* One unit **decrease** in CD4 cell count corresponds to a 1.33-fold increase in the risk of death (95% CI: 1.24; 1.43)
+
+</div>
+
+
+
+## Comparison to standard LMM {.smaller}
+
+The standard linear mixed effects model of 
+$$
+y_{i}(t) = \beta_0 +\beta_1t + \beta_2 \{t \times \text{ddI}_i\}  + b_{i0} + b_{i1}t + \epsilon_{i}(t)
+$$
+does not take into account the **potential** MNAR missing data mechanism due to death.
+
+```{r}
+lmmmod <- lme(CD4 ~ obstime + obstime:drug,
+              random = ~ obstime | patient,
+              data = aids)
+summary(lmmmod)
+```
+
+
+Parameter estimates for **CD4 cell count**
+
+|       |       **JM**      |      **LMM**    |
+|-------|:------------:|:------------:|
+|              | $\hat\beta$ (SE)  | $\hat\beta$ (SE)  |
+| Time         | -0.19 (0.02) | -0.16 (0.02) |
+| Treat:Time   | 0.012 (0.03) | 0.028 (0.03) |
+
+Expected values of **CD4 cell count**
+
+|       |       **JM**      |      **LMM**    |
+|-------|:------------:|:------------:|
+| $E(Y|ddI=0)$ | $7.220-0.192t$ | $7.189-0.163t$ |
+| $E(Y|ddI=1)$ | $7.220-0.180t$ | $7.189-0.135t$ |
+
+
+
+* Because JM assumes that drop-out process is informative, it is often used as a **sensitivity analysis** 
+* If the parameter estimates and the standard errors are similar, then we may be able to conclude that the drop-out process is non-informative
+* Why not use JM as the main analysis? 
+
+
+
+
+## Conclusion {.smaller}
+ 
+The bivariate Joint Model for a Longitudinal Outcome and a Terminal Time-to-Event Outcome is useful to
+
++ Account for **endogenous** time-dependent variables
++ Model **joint association** between a longitudinal and time-to-event processes
++ Account for **informative dropout** from longitudinal process
++ Get better estimation
+
+# Conclusion 
+
+* The literature on dealing with dropouts in longitudinal studies, and missing data in correlated data, is fast-growing
+  + Keep up with the literature!
+* If possible, **avoid** missing data
+  + How can we avoid individuals from dropping out of the study?
+* Sensitivity analysis is crucial 
