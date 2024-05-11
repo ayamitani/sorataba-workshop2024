@@ -1,5 +1,5 @@
 ---
-title: "3)	Module 3: Mixed effects models"
+title: "Module 3: Mixed effects models"
 author: "Aya Mitani"
 format:
   revealjs:
@@ -18,8 +18,305 @@ library(lme4)
 library(kableExtra)
 library(gtsummary)
 library(texreg)
+library(AICcmodavg)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
+```
+
+
+# Linear mixed effects models
+
+## Linear mixed effects models
+
+* So far, we have discussed models for longitudinal data where changes in the mean response can be expressed as,
+
+$$
+E(Y_{i}|X_{i}) = X_{i}\beta,
+$$
+and where the primary goal is to make inferences about the population regression parameters, $\beta$
+
+* Specification of this regression model was completed by making additional assumptions about the structure of $\text{Cov}(Y_{i})=\Sigma_{i}$
+
+* We now consider an alternative, but closely related, approach for analyzing longitudinal data using **linear mixed effects models**
+
+## Basic concept
+
+* Some subset of the regression parameters **vary randomly** from one individual (cluster) to another, thereby accounting for sources of **natural heterogeneity** in the population
+* Individuals in the population are assumed to have their own **subject-specific** mean response trajectories over time
+* The mean response is modeled as a combination of population characteristics, $\beta$, that are assumed to be **shared** by all individuals, and subject-specific effects, $b_i$, that are **unique** to a particular individual
+
+## Linear mixed effects model{.smaller}
+
+Using vector and matrix notation, the **linear mixed effects model** is expressed as
+
+$$
+Y_{i} = X_{i}\beta + Z_{i}b_{i} + \epsilon_{i}
+$$
+The three components of the mixed effects models are:
+
+::: {style="font-size: 75%;"}
+
+<a> **Fixed effects** </a> 
+
+* Variables that are constant across individuals
+* $X_{i}$ is a $(n_{i} \times p)$ matrix of **covariates**
+* $\beta$ is a $(p \times 1)$ vector of **fixed** effects
+
+<a> **Random effects** </a> 
+
+* Variables that vary among individuals
+* $Z_{i}$ is a $(n_{i} \times q)$ matrix of **covariates**, with $q \le p$ (Usually, subset of $X_{i}$)
+  + Usually, the columns of $Z_{i}$ are a subset of the columns of 
+* $b_{i}$ is a $(q \times 1)$ vector of **random** effects
+
+<a> **Errors** </a> 
+
+* $\epsilon_{i}$ is a $(n_{i} \times 1)$ vector of **errors**
+
+:::
+
+## Linear mixed effects model{.smaller}
+  
+Additionally,
+
+* The random effects, $b_{i}$, are assumed to be **independent** of the covariates, $X_{i}$, and has a multivariate normal distribution with mean 0 and covariance matrix $G$
+  + $E(b_{i})=0$ and $\text{Cov}(b_{i})=G$ 
+* The errors, $\epsilon_{i}$, are assumed to be **independent** of $b_{i}$, and has a multivariate normal distribution with mean 0 and covariance matrix $R_{i}$
+  + $E(\epsilon_{i})=0$ and $\text{Cov}(\epsilon_{i})=R_{i}$
+  + Further, we usually assume that $R_{i}$ is the diagonal matrix $\sigma^{2}I_{n_{i}}$
+  + It is possible to assume $R_{i}$ to have a non-diagonal covariance structure, but only for **random intercepts models** 
+
+## Linear mixed effects model{.smaller}
+
+* With the inclusion of some random effects, the covariances among repeated measures can be expressed as **functions of time**
+* Covariance pattern models do not distinguish the different sources of variability that have an impact on the covariance
+* Linear mixed effects models 
+  + explicitly distinguish **between-subject** and **within-subject** sources of variability
+  + can also be used to obtain **predictions** of individual growth trajectories over time
+  + are well suited for analyzing inherently **unbalanced** longitudinal data 
+  
+## Mean functions of LMM{.smaller}
+The **conditional** or **subject-specific** mean of $Y_{i}$ is given by
+
+$$
+E(Y_{i}|b_{i}) = X_{i}\beta + Z_{i}b_{i},
+$$
+while the **marginal** or **population-averaged** mean of $Y_{i}$ is given by
+
+$$
+\begin{align}
+E(Y_{i}) 
+&= \mu_{i} \\
+&= E\left\{E(Y_{i}|b_{i})\right\} \\
+&= E(X_{i}\beta + Z_{i}b_{i}) \\
+&= X_{i}\beta + Z_{i}E(b_{i}) \\
+&= X_{i}\beta.
+\end{align}
+$$
+
+## Covariance of LMM{.smaller}
+
+In a similar way, we can distinguish between conditional and marginal covariances.
+
+The **conditional covariance** of $Y_{i}$, given $b_{i}$, is 
+
+$$
+\text{Cov}(Y_{i}|b_{i}) = \text{Cov}(\epsilon_{i}) = R_{i},
+$$
+
+while the **marginal covariance** of $Y_{i}$, averaged over the distribution of $b_{i}$ is
+
+$$
+\begin{align}
+\text{Cov}(Y_{i})
+&= \text{Cov}(X_{i}\beta + Z_{i}b_{i} + \epsilon_{i}) \\
+&= \text{Cov}(Z_{i}b_{i} + \epsilon_{i}) \\
+&= \text{Cov}(Z_{i}b_{i}) + \text{Cov}(\epsilon_{i}) \\
+&= Z_{i}\text{Cov}(b_{i})Z^{T}_{i} + \text{Cov}(\epsilon_{i}) \\
+&= Z_{i}GZ^{T}_{i} + R_{i} \\
+&= Z_{i}GZ^{T}_{i} + \sigma^{2}I_{n_{i}}.
+\end{align}
+$$
+
+Note that this is **not** a diagonal matrix. $\text{Cov}(Y_{i})$ will have non-zero off-diagonal elements, thereby accounting for the **correlation among the repeated measurements** on the same individuals in a longitudinal study.
+
+## Example: random intercepts model{.smaller}
+
+We will revisit the dental study.
+
+```{r}
+dental <- read.table(here("datasets", "dentalstudy.txt"), header = TRUE)
+dentallong <- dental %>%
+  pivot_longer(cols = starts_with("distance"),
+               names_to = "age",
+               # this removes "distance_age" from the values
+               names_prefix = "distance_age", 
+               values_to = "distance",
+  ) %>%
+  # convert age to numeric
+  mutate(age = as.numeric(age),
+         agestar = age - 8) %>%
+  # create new variable indicating measurement occasion
+  group_by(id) %>%
+  mutate(time = row_number()) %>%
+  ungroup() 
+
+ggplot(data = dentallong, aes(x = age, y = distance, color = gender)) +
+  geom_point(size = 1.5) +    
+  # add mean trajectory for each treatment group
+  stat_summary(aes(group = gender), fun = mean, geom="line") + 
+  labs(y = "Distance", x = "Age", color = "Gender", fill = "Gender") + 
+  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Dark2") +
+  theme_bw() 
+```
+
+
+## Example: random intercepts model{.smaller}
+
+* The simplest LMM is one in which a single random intercepts is introduced
+* $Z_{i}$ is now a $(n_{i} \times 1)$ vector of 1's
+* $b_{i}$ is a subject-specific deviation around the population intercept, $\beta_0$, with $E(b_{i}) = 0$ and  $\text{Var}(b_{i}) = \sigma^{2}_{b}$
+* The measurement error is assumed to be random with $E(\epsilon_{ij}) = 0$ and $\text{Var}(\epsilon_{ij}) = \sigma^{2}$
+
+* We will fit the following LMM with random intercepts across subjects
+$$
+Y_{ij} = \beta_{0} + \beta_{1}\text{Age}^{*}_{ij} + \beta_{2}\text{Gender}_{i} + \beta_{3}\text{Age}^{*}_{ij} \times \text{Gender}_{i} + b_i + \epsilon_{ij}
+$$
+where $\small \text{Age}^{*} = \text{Age} - 8 \in (0,2,4,6)$.
+
+## Example: LMM in R
+
+There are two popular packages in R to fit LMM: 
+
+ + `nlme` and `lmer`
+```{r}
+#| echo: TRUE
+
+# random intercepts model with nlme package
+library(nlme)
+fit1 <- lme(distance ~ agestar * gender, random = ~ 1 | id,
+            data = dentallong)
+
+# same random intercepts model can be fit with lmer function in lme4 package
+library(lme4)
+fit1lmer <- lmer(distance ~ agestar * gender + (1|id), 
+                 data = dentallong)
+```
+
+
+## Example: LMM in R{.smaller}
+```{r}
+#| echo: TRUE
+
+summary(fit1)
+```
+
+* `lme()` (and `lmer()`) uses REML (Restricted Maximum Likelihood estimation) by default to fit LMM
+* Likelihood based statistics can be used: AIC, BIC, likelihood ratio test
+
+
+## Example: Marginal covariance structure{.smaller}
+
+* Note that 
+  + $\hat{\sigma}_b = 1.82$ and $\hat{\sigma}_{\epsilon} = 1.39$
+  
+::: {style="font-size: 85%;"}
+* The marginal variance of each response is given by
+$$
+\begin{align}
+\text{Var}(Y_{ij})
+&= \text{Var}(X^{T}_{ij}\beta + b_{i} + \epsilon_{ij}) \\
+&= \text{Var}(b_{i} + \epsilon_{ij}) \\
+&= \text{Var}(b_{i}) + \text{Var}(\epsilon_{ij}) \\
+&= \sigma^{2}_{b} + \sigma^{2}_{\epsilon} = 5.22
+\end{align}
+$$
+* The marginal covariance between any pair of responses, $Y_{ij}$ and $Y_{ik}$, is given by
+$$
+\begin{align}
+\text{Cov}(Y_{ij},Y_{ik})
+&= \text{Cov}(X^{T}_{ij}\beta + b_{i} + \epsilon_{ij}, X^{T}_{ik}\beta + b_{i} + \epsilon_{ik}) \\
+&= \text{Cov}(b_{i} + \epsilon_{ij}, b_{i} + \epsilon_{ik}) \\
+&= \text{Cov}(b_{i}, b_{i}) + \underbrace{\text{Cov}(b_{i}, \epsilon_{ik})}_{0} + \underbrace{\text{Cov}(\epsilon_{ij}, \epsilon_{ik})}_{0} + \underbrace{\text{Cov}(\epsilon_{ij}, b_{i})}_{0} \\
+&= \text{Cov}(b_{i}, b_{i}) \\
+&= \text{Var}(b_{i}) = \sigma^{2}_{b} = 3.30\\
+\end{align}
+$$
+
+:::
+
+## Example: Marginal covariance structure{.smaller}
+
+The marginal **covariance matrix** of the repeated measurements has the following **compound symmetry** pattern: 
+
+$$
+\text{Cov}(Y_{i}) =
+\left(\begin{array}{ccccc} 
+\sigma^{2}_{b} + \sigma^{2} & \sigma^{2}_{b} & \sigma^{2}_{b} & ...& \sigma^{2}_{b}\\
+\sigma^{2}_{b} & \sigma^{2}_{b} + \sigma^{2} & \sigma^{2}_{b} & ... & \sigma^{2}_{b}\\
+\sigma^{2}_{b} & \sigma^{2}_{b} & \sigma^{2}_{b} + \sigma^{2} & ... & \sigma^{2}_{b}\\
+\vdots & \vdots & \vdots  & \ddots  & \vdots \\
+\sigma^{2}_{b} & \sigma^{2}_{b} & \sigma^{2}_{b} & ... & \sigma^{2}_{b} + \sigma^{2}\\
+\end{array}\right).
+$$
+Note: This is the only covariance model that arises in both the patterned and random effects families.
+
+```{r}
+#| echo: TRUE
+
+getVarCov(fit1, type = "marginal", individual = 1)
+```
+## Example: ICC {.smaller}
+
+The correlation between $Y_{ij}$ and $Y_{ik}$ is
+$$
+\begin{align}
+\text{Corr}(Y_{ij}, Y_{ik}) &= \frac{\text{Cov}(Y_{ij}, Y_{ik})}{\sqrt{\text{Var}(Y_{ij})\text{Var}(Y_{ik})}}\\
+&= \frac{\sigma_{b}^{2}}{\sqrt{(\sigma_{b}^{2} + \sigma_{\epsilon}^{2})(\sigma_{b}^{2} + \sigma_{\epsilon}^{2})}}\\
+&= \frac{\sigma_{b}^{2}}{\sigma_{b}^{2} + \sigma_{\epsilon}^{2}} = 0.63
+\end{align}
+$$
+This correlation is referred to as **within-subject** correlation or **intraclass** correlation.
+
+```{r}
+#| echo: TRUE
+getVarCov(fit1)
+fit1$sigma^2
+```
+
+## Prediction{.smaller}
+
+* In many applications where longitudinal data arise, we focus on inference of fixed effects, $\beta$
+* However, in some longitudinal studies, we may want to **predict** subject-specific profiles
+* Because the linear mixed effects model explicitly distinguishes between fixed and random effects, we can obtain predictions of **subject-specific effects**, $b_{i}$, or of the **subject-specific response trajectories**, $X_{i}\beta + Z_{i}b_{i}$
+
+The best predictor of $b_{i}$ is known as the **best linear unbiased predictor (BLUP)**,
+$$
+E(b_{i}|Y_{i})=GZ^{T}_{i}\Sigma_{i}^{-1}(Y_{i}-X_{i}\hat\beta),
+$$
+where $\Sigma_{i} = \text{Cov}(Y_{i}) =  Z_{i}GZ^{T}_{i} + R_{i}$.  
+
+When we replace the unknown covariance parameters by their REML estimates, we obtain the **empirical BLUP**,
+$$
+\hat{b}_{i}=\hat{G}Z_{i}^{T}\hat\Sigma_{i}^{-1}(Y_{i}-X_{i}\hat\beta).
+$$
+Given the empirical BLUP, $\hat{b}_{i}$, we can also obtain the $i$th subject's predicted response profile as:
+$$
+\hat{Y}_{i}=X_{i}\hat\beta+Z_{i}\hat{b}_{i}.
+$$
+
+```{r}
+condmean <- predict(fit1) # gives you the conditional means
+margmean <- predictSE(fit1, dentallong)$fit # gives you the marginal means
+preds <- as.data.frame(cbind(dentallong, condmean, margmean))
+ggplot(data = preds, aes(x = agestar, y = condmean, group = id)) +
+  geom_line(aes(color = gender), linetype = 3, alpha = 0.7) + 
+  geom_line(aes(x = agestar, y = margmean, color = gender), size = 2) + 
+  labs(y = "Distance", x = "Age", color = "Gender") + 
+  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Dark2") +
+  theme_bw()
 ```
 
