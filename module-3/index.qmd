@@ -361,3 +361,85 @@ ggplot(data = preds, aes(x = agestar, y = condmean, group = id)) +
   scale_color_brewer(palette = "Dark2") 
 ```
 
+
+## Example: random intercepts and slopes model{.smaller}
+
+* We can allow additional regression coefficients to vary randomly
+* A very **flexible**, yet **parsimonious**, class of random effects covariance structures become available by allowing a subset of regression coefficients (other than just the intercept) to vary randomly
+
+$$
+Y_{ij} = \beta_{0} + \beta_{1}\text{Age}^{*}_{ij} + \beta_{2}\text{Gender}_{i} + \beta_{3}\text{Age}^{*}_{ij} \times \text{Gender}_{i} + b_{i0} + b_{i1}\text{Age}^{*}_{ij} + \epsilon_{ij}
+$$
+
+The vector of random effects for individual $i$, $b_{i}$, is $2 \times 1$:
+$$
+b_{i} = 
+\left(\begin{array}{cc} 
+b_{0i} \\
+b_{1i} 
+\end{array}\right) \quad \text{with} \quad
+E(b_{i}) = 
+\left(\begin{array}{cc} 
+0 \\
+0
+\end{array}\right) \\\
+$$
+
+$$
+\text{and} \quad \begin{align}
+G = \text{Cov}(b_{i}) =
+\left(\begin{array}{cc} 
+\text{Var}(b_{0i}) & \text{Cov}(b_{1i},b_{1i}) \\
+\text{Cov}(b_{0i},b_{1i}) & \text{Var}(b_{1i}) 
+\end{array}\right) 
+=\left(\begin{array}{cc} 
+g_{00} & g_{10} \\
+g_{10} & g_{11}
+\end{array}\right) \\
+\end{align}
+$$
+
+## Example: Covariance{.smaller}
+
+So, remember that $\text{Cov}(Y_{i}) = Z_{i}GZ^{T}_{i} + \sigma^{2}I_{n_{i}}$?
+
+We can further show that 
+
+$$
+\text{Var}(Y_{ij}) = g_{11} + 2t_{ij}g_{12} + t_{ij}^{2}g_{22} + \sigma^{2}
+$$
+and
+
+$$
+\text{Cov}(Y_{ij},Y_{ik}) = g_{11} + (t_{ij}+t_{ik})g_{12} + t_{ij}t_{ik}g_{22}.
+$$
+Therefore, $\text{Cov}(Y_{i})$ can be expressed as a **function of time**, $t_{ij}$!
+
+* The variance, $\text{Var}(Y_{ij})$ can increase or decrease as a **quadratic function** of the times of measurement
+* The magnitude of the covariance between a pair of responses $\text{Cov}(Y_{ij},Y_{ik})$ depends on the **time separation** between $t_{ij}$ and $t_{ik}$
+
+Thus, we can construct a very **flexible** covariance structure in a more **parsimonious** way with a linear mixed effects model than with a covariance pattern model. 
+
+
+## Example: LMM in R{.smaller}
+```{r}
+#| echo: TRUE
+## random intercepts + random slopes
+
+fit2 <- lme(distance ~ agestar * gender, random = ~ agestar | id, 
+            data = dentallong)
+summary(fit2)
+```
+
+## Example: LMM in R{.smaller}
+
+
+```{r}
+#| echo: TRUE
+getVarCov(fit2)
+getVarCov(fit2, type = "conditional", individual = 1)
+getVarCov(fit2, type = "marginal", individual = 1)
+```
+
+
+
