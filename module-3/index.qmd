@@ -168,8 +168,7 @@ ggplot(data = dentallong, aes(x = age, y = distance, color = gender)) +
   stat_summary(aes(group = gender), fun = mean, geom="line") + 
   labs(y = "Distance", x = "Age", color = "Gender", fill = "Gender") + 
   scale_fill_brewer(palette = "Dark2") + 
-  scale_color_brewer(palette = "Dark2") +
-  theme_bw() 
+  scale_color_brewer(palette = "Dark2") 
 ```
 
 
@@ -215,6 +214,17 @@ summary(fit1)
 
 * `lme()` (and `lmer()`) uses REML (Restricted Maximum Likelihood estimation) by default to fit LMM
 * Likelihood based statistics can be used: AIC, BIC, likelihood ratio test
+
+
+## Example: LMM in R{.smaller}
+```{r}
+#| echo: TRUE
+
+summary(fit1)
+```
+
+* Marginal mean for Females: $E(Y_{ij}|X_{ij}) = 21.2 + 0.48\text{Age}^{*}_{ij}$
+* Marginal mean for Males: $E(Y_{ij}|X_{ij}) = 22.6 + 0.78\text{Age}^{*}_{ij}$
 
 
 ## Example: Marginal covariance structure{.smaller}
@@ -286,6 +296,36 @@ getVarCov(fit1)
 fit1$sigma^2
 ```
 
+## Simulated visualization of 10 subjects with 5 time points 
+```{r}
+sim.rand.int <- function(n, sdint, sderr){
+  int <- rep(rnorm(n, mean = 0, sd = sdint), each = 5)
+  err <- rnorm(n * 5, mean = 0, sd = sderr)
+  t <- rep(0:4, n)
+  id <- rep(1:n, each = 5)
+  y <- t + int + err
+  out.data <- data.frame(scen = paste0(sdint, sderr), id = id, y = y, t = t)
+  return(out.data)
+}
+scen11 <- sim.rand.int(n = 10, sdint = 1, sderr = 1)
+scen10 <- sim.rand.int(n = 10, sdint = 2, sderr = 0)
+scen01 <- sim.rand.int(n = 10, sdint = 0, sderr = 2)
+scen21 <- sim.rand.int(n = 10, sdint = 2, sderr = 1)
+allscens <- rbind(scen11, scen10, scen01, scen21)
+allscens$scen <- factor(allscens$scen, levels = c("11", "20", "02", "21"),
+                        ordered = TRUE, labels=c("sigma[b] == 0 ~~ sigma[epsilon] == 0", 
+                                                 "sigma[b] == 2 ~~ sigma[epsilon] == 0",
+                                                 "sigma[b] == 0 ~~ sigma[epsilon] == 2",
+                                                 "sigma[b] == 2 ~~ sigma[epsilon] == 1"))
+p <- ggplot(allscens, aes(y = y, x = t, group = id)) + 
+  geom_line(aes(color = scen), linewidth = 1) + 
+  labs(y = "y", x = "Time") + 
+  facet_wrap(~ scen, labeller = label_parsed) + 
+  theme(legend.position = "none") 
+p
+```
+
+
 ## Prediction{.smaller}
 
 * In many applications where longitudinal data arise, we focus on inference of fixed effects, $\beta$
@@ -307,6 +347,8 @@ $$
 \hat{Y}_{i}=X_{i}\hat\beta+Z_{i}\hat{b}_{i}.
 $$
 
+## Prediction{.smaller}
+Here is a plot of the estimated **marginal** and **conditional** means by gender.
 ```{r}
 condmean <- predict(fit1) # gives you the conditional means
 margmean <- predictSE(fit1, dentallong)$fit # gives you the marginal means
@@ -316,7 +358,6 @@ ggplot(data = preds, aes(x = agestar, y = condmean, group = id)) +
   geom_line(aes(x = agestar, y = margmean, color = gender), size = 2) + 
   labs(y = "Distance", x = "Age", color = "Gender") + 
   scale_fill_brewer(palette = "Dark2") + 
-  scale_color_brewer(palette = "Dark2") +
-  theme_bw()
+  scale_color_brewer(palette = "Dark2") 
 ```
 
