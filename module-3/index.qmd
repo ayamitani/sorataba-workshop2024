@@ -348,6 +348,31 @@ $$
 $$
 
 ## Prediction{.smaller}
+Coefs of fixed effects
+```{r}
+#| echo: TRUE
+coef(summary(fit1)) 
+```
+
+
+::: {.column width="49%"}
+($\hat{\beta}_0 + \hat{b}_i$), and coefs of fixed effects
+```{r}
+#| echo: TRUE
+coef(fit1)[1:15,] 
+```
+:::
+
+::: {.column width="49%"}
+Empirical BLUP
+```{r}
+#| echo: TRUE
+ranef(fit1)[1:20,] 
+```
+:::
+
+
+## Prediction{.smaller}
 Here is a plot of the estimated **marginal** and **conditional** means by gender.
 ```{r}
 condmean <- predict(fit1) # gives you the conditional means
@@ -441,5 +466,205 @@ getVarCov(fit2, type = "conditional", individual = 1)
 getVarCov(fit2, type = "marginal", individual = 1)
 ```
 
+
+## Prediction{.smaller}
+Coefs of fixed effects
+```{r}
+#| echo: TRUE
+coef(summary(fit2)) 
+```
+
+
+::: {.column width="49%"}
+($\hat{\beta} + \hat{b}_i$), and coefs of fixed effects
+```{r}
+#| echo: TRUE
+coef(fit2)[1:15,] 
+```
+:::
+
+::: {.column width="49%"}
+Empirical BLUP
+```{r}
+#| echo: TRUE
+ranef(fit2)[1:15,] 
+```
+:::
+
+
+## Prediction{.smaller}
+Here is a plot of the estimated **marginal** and **conditional** means by gender.
+```{r}
+condmean <- predict(fit2) # gives you the conditional means
+margmean <- predictSE(fit2, dentallong)$fit # gives you the marginal means
+preds <- as.data.frame(cbind(dentallong, condmean, margmean))
+ggplot(data = preds, aes(x = agestar, y = condmean, group = id)) +
+  geom_line(aes(color = gender), linetype = 3, alpha = 0.7) + 
+  geom_line(aes(x = agestar, y = margmean, color = gender), size = 2) + 
+  labs(y = "Distance", x = "Age", color = "Gender") + 
+  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Dark2") 
+```
+
+
+## Random intercepts and covariance pattern model{.smaller}
+
+* We can introduce more flexibility by explicitly by modeling the correlation structure in $\small R_{i}$
+  - i.e. Move beyond $\small  R_{i} = \sigma^{2}I_{n_{i}}$ and permit the $\small \epsilon_{i}$ to be correlated
+* The hybrid random intercepts and covariance pattern model looks like:
+$$
+Y_{ij} = X^{T}_{ij}\beta + b_{0i} + U_{i}(t_{ij}) + \epsilon^{*}_{ij},
+$$
+where
+  - $\small b_{0i}$ is an individual-specific random intercept with $\small E(b_{0i})=0$ and $\small \text{Var}(b_{0i}) = \sigma^{2}_{b}$
+  - $\small U_{i}(t_{ij})$ is a covariance pattern (serial dependence) term 
+  - We assume $\small E(\epsilon^{*}_{ij})=0$ and $\small \text{Var}(\epsilon^{*}_{ij}) = \sigma^{2}$
+  - Finally, we assume $\small U_{i}(t_{ij})$ are assumed to have a normal distribution, with zero mean, variance $\small \sigma^{2}_{u}$, and correlation
+$$
+\text{Corr}\left\{U_{i}(t_{ij}),U_{i}(t_{ik})\right\} = \rho(|t_{ij}-t_{ik}|).
+$$
+
+
+* Note that $\small \epsilon^{*}_{ij}$ captures the variation in error terms beyond that is explained by $\small U_{i}(t_{ij})$
+
+
+## Example: random intercepts + auto-regressive errors {.smaller}
+
+```{r}
+#| echo: TRUE
+
+fit3 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
+            corr = corCAR1(form = ~ agestar | id),
+            data = dentallong)
+getVarCov(fit3)
+getVarCov(fit3, type = "conditional", individual = 1)
+getVarCov(fit3, type = "marginal", individual = 1)
+```
+
+
+
+
+## Example: random intercepts + exponential errors {.smaller}
+
+```{r}
+#| echo: TRUE
+
+fit4 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
+            corr = corExp(form = ~ agestar | id),
+            data = dentallong)
+getVarCov(fit4)
+getVarCov(fit4, type = "conditional", individual = 1)
+getVarCov(fit4, type = "marginal", individual = 1)
+```
+
+
+## Example: random intercepts + heteroskedasticity errors across age {.smaller}
+
+```{r}
+#| echo: TRUE
+
+fit5 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
+            weights = varIdent(form = ~ 1 | agestar),
+            data = dentallong)
+getVarCov(fit5)
+getVarCov(fit5, type = "conditional", individual = 1)
+getVarCov(fit5, type = "marginal", individual = 1)
+```
+
+
+
+## Example: random intercepts + heteroskedasticity errors across gender {.smaller}
+
+```{r}
+#| echo: TRUE
+
+fit6 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
+            weights = varIdent(form = ~ 1 | gender),
+            data = dentallong, method = "ML")
+getVarCov(fit6)
+getVarCov(fit6, type = "conditional", individual = 1) # female
+getVarCov(fit6, type = "conditional", individual = 27) # male
+```
+
+## Example: random intercepts + heteroskedasticity errors across gender {.smaller}
+
+```{r}
+#| echo: TRUE
+
+getVarCov(fit6, type = "marginal", individual = 1) # female
+getVarCov(fit6, type = "marginal", individual = 27) # male
+```
+
+
+
+## Comparing AIC and BIC {.smaller}
+```{r}
+#| echo: TRUE
+#| eval: FALSE
+AIC(fit) # gives you AIC
+BIC(fit) # gives you BIC
+```
+
+```{r}
+#| echo: FALSE
+getAICBIC <- function(fit){
+  AIC <- AIC(fit)
+  BIC <- BIC(fit)
+  return(c(AIC, BIC))
+}
+
+allfits <- list(fit1, fit2, fit3, fit4, fit5, fit6)
+AICBIClist <- list()
+for(i in 1:6){
+  AICBIClist[[i]] <- getAICBIC(allfits[[i]])
+}
+
+AICBICmat <- do.call("rbind", AICBIClist)
+depmodel <- c(
+  "1. Random intercepts + ind errors",
+  "2. Random intercepts and slopes + ind errors",
+  "3. Random intercepts + AR1 errors",
+  "4. Random intercepts + exp errors",
+  "5. Random intercepts + heteroske ind errors (age)",
+  "6. Random intercepts + heteroske ind errors (gender)"
+)
+AICBICmat <- as.data.frame(cbind(depmodel, AICBICmat))
+names(AICBICmat) <- c("Covariance model", "AIC", "BIC")
+
+AICBICmat %>%
+  mutate(AIC = as.numeric(AIC),
+         BIC = as.numeric(BIC)) %>%
+  kbl(digits = 2) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+* Model 6 (Random intercepts + heterogeneous variance terms across gender) has the lowest AIC and BIC
+
+
+
+## Comparing coefficient estimates and standard errors for $\beta_{3}$ {.smaller}
+```{r}
+getcoef <- function(sumfit){
+  intcoef <- coef(sumfit)[4,1:2]
+  return(intcoef)
+}
+allsums <- list(summary(fit1), summary(fit2), summary(fit3), summary(fit4), summary(fit5), summary(fit6))
+coeflist <- list()
+for(i in 1:6){
+  coeflist[[i]] <- getcoef(allsums[[i]])
+}
+coefmat <- do.call("rbind", coeflist)
+coefmat <- as.data.frame(cbind(depmodel, coefmat))
+names(coefmat) <- c("Covariance model", "Estimate", "StdError")
+
+coefmat %>%
+  mutate(Estimate = as.numeric(Estimate),
+         StdError = as.numeric(StdError)) %>%
+  kbl(digits = 3) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+* $\hat\beta_{3}$ are very similar across all models
+* Model 6 has the smallest standard errors
 
 
