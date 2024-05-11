@@ -1460,19 +1460,6 @@ Aya Mitani
 <li>We need to be <strong>explicit</strong> about the assumptions made regarding the reasons for missing data</li>
 </ul>
 </section>
-<section id="missing-data-notation" class="slide level2 smaller">
-<h2>Missing data notation</h2>
-<p>Suppose we have <span class="math inline">\(n\)</span> repeated measurements of the same individual. Then, the <span class="math inline">\(i\)</span>th subject’s set of responses can be represented as a <span class="math inline">\(n \times 1\)</span> vector denoted by <span class="math display">\[
-Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}.
-\]</span> In the missing data literature, the response vector <span class="math inline">\(Y_{i}\)</span> is coupled with a <span class="math inline">\(n \times 1\)</span> vector of <strong>response indicators</strong> <span class="math display">\[
-R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
-\]</span> where <span class="math inline">\(R_{ij} = 1\)</span> if <span class="math inline">\(Y_{ij}\)</span> is observed and <span class="math inline">\(R_{ij} = 0\)</span> is <span class="math inline">\(Y_{ij}\)</span> is missing.</p>
-<p>Given <span class="math inline">\(R_{i}\)</span>, we can <strong>partition</strong> <span class="math inline">\(Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}\)</span> into two components <span class="math inline">\(Y_{i}^{O}\)</span> and <span class="math inline">\(Y_{i}^{M}\)</span> where</p>
-<ul>
-<li><span class="math inline">\(Y_{i}^{O}\)</span> denotes the vector of <strong>observed</strong> responses for subject <span class="math inline">\(i\)</span></li>
-<li><span class="math inline">\(Y_{i}^{M}\)</span> denotes the vector of <strong>missing</strong> responses for subject <span class="math inline">\(i\)</span></li>
-</ul>
-</section>
 <section id="missing-data-pattern" class="slide level2 smaller">
 <h2>Missing data pattern</h2>
 <p>Largely, two types of missing data pattern exist in longitudinal studies:</p>
@@ -1566,41 +1553,49 @@ R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
 <li>84 women dropped out after the third visit</li>
 </ul>
 </section>
+<section id="missing-data-notation" class="slide level2 smaller">
+<h2>Missing data notation</h2>
+<p>Suppose we have <span class="math inline">\(n\)</span> repeated measurements of the same individual. Then, the <span class="math inline">\(i\)</span>th subject’s set of responses can be represented as a <span class="math inline">\(n \times 1\)</span> vector denoted by <span class="math display">\[
+Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}.
+\]</span> In the missing data literature, the response vector <span class="math inline">\(Y_{i}\)</span> is coupled with a <span class="math inline">\(n \times 1\)</span> vector of <strong>response indicators</strong> <span class="math display">\[
+R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
+\]</span> where <span class="math inline">\(R_{ij} = 1\)</span> if <span class="math inline">\(Y_{ij}\)</span> is observed and <span class="math inline">\(R_{ij} = 0\)</span> is <span class="math inline">\(Y_{ij}\)</span> is missing.</p>
+<p>Given <span class="math inline">\(R_{i}\)</span>, we can <strong>partition</strong> <span class="math inline">\(Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}\)</span> into two components <span class="math inline">\(Y_{i}^{O}\)</span> and <span class="math inline">\(Y_{i}^{M}\)</span> where</p>
+<ul>
+<li><span class="math inline">\(Y_{i}^{O}\)</span> denotes the vector of <strong>observed</strong> responses for subject <span class="math inline">\(i\)</span></li>
+<li><span class="math inline">\(Y_{i}^{M}\)</span> denotes the vector of <strong>missing</strong> responses for subject <span class="math inline">\(i\)</span></li>
+</ul>
+</section>
 <section id="missing-data-mechanism" class="slide level2 smaller">
 <h2>Missing data mechanism</h2>
+<div style="font-size: 80%;">
 <h4 id="missing-completely-at-random-mcar">Missing completely at random (MCAR)</h4>
 <ul>
-<li>Probability that responses are missing is unrelated to both
-<ul>
-<li>the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>)</li>
-<li>the value that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</li>
-</ul></li>
+<li>Probability that responses are missing is unrelated to both the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>) and the value that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</li>
 <li><span class="math inline">\(\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i}) = \Pr(R_{i})\)</span></li>
 </ul>
 <h4 id="missing-at-random-mar">Missing at random (MAR)</h4>
 <ul>
-<li>Probability that responses are missing depends on
-<ul>
-<li>the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>)</li>
-<li>but is conditionally unrelated to the values that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</li>
-</ul></li>
+<li>Probability that responses are missing depends on the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>) but is conditionally unrelated to the values that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</li>
 <li><span class="math inline">\(\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i}) = \Pr(R_{i}|Y_{i}^{O}, X_{i})\)</span></li>
 </ul>
 <h4 id="missing-not-at-random-mnar">Missing not at random (MNAR)</h4>
 <ul>
-<li><p>Probability that responses are missing depends on</p>
-<ul>
-<li>the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>)</li>
-<li>and the values that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</li>
-</ul></li>
+<li><p>Probability that responses are missing depends on the set of observed responses (<span class="math inline">\(Y_{i}^{O}\)</span>) and the values that should have been obtained (<span class="math inline">\(Y_{i}^{M}\)</span>)</p></li>
 <li><p><span class="math inline">\(\Pr(R_{i}|Y_{i}^{O}, Y_{i}^{M}, X_{i})\)</span> or <span class="math inline">\(\Pr(R_{i}|Y_{i}^{M}, X_{i})\)</span></p></li>
 <li><p>For <strong>likelihood-based inference</strong>, the crucial distinction is between MCAR/MAR and MNAR</p>
 <ul>
 <li>i.e. for likelihood-based methods, valid inferences can still be obtained even if data are MAR</li>
 </ul></li>
 </ul>
+</div>
 </section>
-<section id="inverse-probability-weighting" class="slide level2 smaller">
+<section>
+<section id="inverse-probability-weighting" class="title-slide slide level1 center">
+<h1>Inverse probability weighting</h1>
+
+</section>
+<section id="inverse-probability-weighting-1" class="slide level2 smaller">
 <h2>Inverse probability weighting</h2>
 <ul>
 <li>Basic idea is to estimate the probability of individuals remaining (or dropping out) in the study and weigh each observation according to that probability
@@ -1614,27 +1609,20 @@ R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
 <li>i.e. marginal analysis with discrete responses</li>
 <li>IPW is often incorporated into <strong>GEE</strong></li>
 </ul></li>
-<li>Requires correct specification of the dropout model (<span class="math inline">\(\Pr(R_{ij}=1|R_{i1}=\cdots R_{i,j-1}, X_{i}, Y_{i1},...,Y_{i,j-1})\)</span>)</li>
+<li>Requires correct specification of the dropout model
+<ul>
+<li><span class="math inline">\(\Pr(R_{ij}=1|R_{i1}=\cdots R_{i,j-1}, X_{i}, Y_{i1},...,Y_{i,j-1})\)</span></li>
+</ul></li>
 </ul>
 </section>
 <section id="ipw-gee" class="slide level2 smaller">
 <h2>IPW-GEE</h2>
-<p><span class="math display">\[
-R_{i} = (R_{i1},...,R_{in})^{T}
-\]</span> <span class="math display">\[
-D_{i}=1+\sum_{j=1}^{n}R_{ij}
-\]</span> For example,</p>
-<ul>
-<li>an individual who completes the study with no missed visits will have <span class="math inline">\(Y_{i} = (Y_{i1},...,Y_{in})^{T}\)</span> and <span class="math inline">\(D_{i}=n+1\)</span></li>
-<li>an individual who drops out after the third visit will have <span class="math inline">\(Y^{O}_{i} = (Y_{i1},Y_{i2},Y_{i3})^{T}\)</span> and <span class="math inline">\(D_{i}=3+1=4\)</span></li>
-</ul>
-</section>
-<section id="ipw-gee-1" class="slide level2 smaller">
-<h2>IPW-GEE</h2>
+<div style="font-size: 90%;">
 <p>The IPW-GEE estimator is obtained as the solution to the following <strong>weighted</strong> estimating equations:</p>
 <p><span class="math display">\[
 \sum_{i=1}^{N}D_{i}^{T}V_{i}^{-1}W_{i}(Y_{i}-\mu)=0,
-\]</span> where</p>
+\]</span></p>
+<p>where</p>
 <ul>
 <li><span class="math inline">\(D_{i}\)</span> is the <span class="math inline">\(n \times p\)</span> derivative matrix</li>
 <li><span class="math inline">\(V_{i}\)</span> is a <span class="math inline">\(n \times n\)</span> working covariance matrix for <span class="math inline">\(Y_{i}\)</span></li>
@@ -1648,10 +1636,11 @@ R_{i1}\times w_{i1} &amp; 0 &amp; ... &amp; 0\\
 \end{array}\right)
 \]</span></li>
 </ul>
-<p>The weight, <span class="math inline">\(w_{ij}\)</span> is the inverse of the <strong>unconditional</strong> probability of being observed at the <span class="math inline">\(j\)</span>th occasion.</p>
+</div>
 </section>
-<section id="ipw-gee-2" class="slide level2 smaller">
+<section id="ipw-gee-1" class="slide level2 smaller">
 <h2>IPW-GEE</h2>
+<div style="font-size: 90%;">
 <p>To calculate these weights, let <span class="math inline">\(\pi_{ij}\)</span> denote the <strong>conditional</strong> probability of the <span class="math inline">\(i\)</span>th individual being observed (or not dropping out) at the <span class="math inline">\(j\)</span>th occasion, given that this individual was observed at the prior occasions.</p>
 <p>For the first occasion we usually assume <span class="math inline">\(R_{i1}=1\)</span> for all individuals, and then <span class="math inline">\(\pi_{i1}=1\)</span>.</p>
 <p>The MAR assumption implies that <span class="math display">\[
@@ -1662,6 +1651,7 @@ R_{i1}\times w_{i1} &amp; 0 &amp; ... &amp; 0\\
 \]</span> The required weight is then given by the <strong>inverse</strong> of the cumulative product of conditional probabilities, <span class="math display">\[
 w_{ij} = (\pi_{i1} \times \pi_{i2} \times \cdots \times \pi_{ij})^{-1}.
 \]</span></p>
+</div>
 </section>
 <section id="estimation-of-weights" class="slide level2 smaller">
 <h2>Estimation of weights</h2>
@@ -1761,7 +1751,7 @@ xmattrt.prevy -0.23810242  0.2195678 -1.0844141 2.781812e-01</code></pre>
 <li>For individuals in the <strong>high</strong> dose group, what is the conditional odds ratio of <strong>dropout</strong> if they experienced amenorrhea at the previous occasion?</li>
 </ul>
 </section>
-<section id="compute-ipw" class="slide level2">
+<section id="compute-ipw" class="slide level2 smaller">
 <h2>Compute IPW</h2>
 <p>First, compute the predicted <span class="math inline">\(\text{logit}(\hat\pi_{ij})\)</span> from the dropout model. <span class="math display">\[
 \text{logit}(\hat\pi_{ij})=\hat\theta_{1}+\hat\theta_{2}I(t=2)+\hat\theta_{3}I(t=3)+\hat\theta_{4}\text{Dose}_{i}+\hat\theta_{5}Y_{i,j-1}+\hat\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1})
@@ -1928,7 +1918,7 @@ Number of clusters:   1151  Maximum cluster size: 4 </code></pre>
 </ul></li>
 </ul></li>
 </ul>
-</section>
+</section></section>
 <section>
 <section id="joint-models-jm-for-longitudinal-and-time-to-event-data" class="title-slide slide level1 center">
 <h1>Joint models (JM) for longitudinal and time-to-event data</h1>
@@ -2228,13 +2218,11 @@ p(y_i, T_i, \delta_i) = \int p(y_i|b_i)\{h(T_i|b_i)^{\delta_i}S(T_i|b_i)\}p(b_i)
 h_{i}(t) &amp;= h_{0}(t)\exp \{\gamma \text{ddI}_i +   \alpha m_{i}(t)\}  
 \end{aligned}
 \]</span></p>
-<div class="blue">
 <p><a href><strong>Interpretation of the survival model</strong> </a></p>
 <ul>
 <li>The hazard of death is 1.40 (95% CI: 1.03; 1.90) times higher among patients receiving ddI compared to patients receiving ddC</li>
 <li>One unit <strong>decrease</strong> in CD4 cell count corresponds to a 1.33-fold increase in the risk of death (95% CI: 1.24; 1.43)</li>
 </ul>
-</div>
 </section>
 <section id="comparison-to-standard-lmm" class="slide level2 smaller">
 <h2>Comparison to standard LMM</h2>

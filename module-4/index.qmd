@@ -45,23 +45,6 @@ theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font si
 
 
 
-## Missing data notation {.smaller}
-
-Suppose we have $n$ repeated measurements of the same individual. Then, the $i$th subject's set of responses can be represented as a $n \times 1$ vector denoted by
-$$
-Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}.
-$$
-In the missing data literature, the response vector $Y_{i}$ is coupled with a $n \times 1$ vector of **response indicators**
-$$
-R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
-$$
-where $R_{ij} = 1$ if $Y_{ij}$ is observed and $R_{ij} = 0$ is $Y_{ij}$ is missing.
-
-Given $R_{i}$, we can **partition** $Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}$ into two components $Y_{i}^{O}$ and $Y_{i}^{M}$ where
-
-* $Y_{i}^{O}$ denotes the vector of **observed** responses for subject $i$
-* $Y_{i}^{M}$ denotes the vector of **missing** responses for subject $i$
-
 
 
 ## Missing data pattern {.smaller}
@@ -131,11 +114,30 @@ amen <- amen %>%
 
 
 
+## Missing data notation {.smaller}
+
+Suppose we have $n$ repeated measurements of the same individual. Then, the $i$th subject's set of responses can be represented as a $n \times 1$ vector denoted by
+$$
+Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}.
+$$
+In the missing data literature, the response vector $Y_{i}$ is coupled with a $n \times 1$ vector of **response indicators**
+$$
+R_{i} = (R_{i1}, R_{i2}, ..., R_{in})^{T},
+$$
+where $R_{ij} = 1$ if $Y_{ij}$ is observed and $R_{ij} = 0$ is $Y_{ij}$ is missing.
+
+Given $R_{i}$, we can **partition** $Y_{i} = (Y_{i1}, Y_{i2}, ..., Y_{in})^{T}$ into two components $Y_{i}^{O}$ and $Y_{i}^{M}$ where
+
+* $Y_{i}^{O}$ denotes the vector of **observed** responses for subject $i$
+* $Y_{i}^{M}$ denotes the vector of **missing** responses for subject $i$
+
 
 
 
 
 ## Missing data mechanism {.smaller}
+
+::: {style="font-size: 80%;"}
 
 #### Missing completely at random (MCAR)
 
@@ -156,11 +158,12 @@ amen <- amen %>%
 * For **likelihood-based inference**, the crucial distinction is between MCAR/MAR and MNAR
   - i.e. for likelihood-based methods, valid inferences can still be obtained even if data are MAR
 
+:::
 
 
+# Inverse probability weighting 
 
 ## Inverse probability weighting {.smaller}
-
 
 * Basic idea is to estimate the probability of individuals remaining (or dropping out) in the study and weigh each observation according to that probability
   + Individuals with low probability of remaining in the study (high probability of dropping out) are given larger weights
@@ -169,32 +172,23 @@ amen <- amen %>%
 * IPW methods are more appealing when a full likelihood-based analysis is not possible 
   + i.e. marginal analysis with discrete responses
   + IPW is often incorporated into **GEE**
-* Requires correct specification of the dropout model ($\Pr(R_{ij}=1|R_{i1}=\cdots R_{i,j-1}, X_{i}, Y_{i1},...,Y_{i,j-1})$)
+* Requires correct specification of the dropout model
+  + $\Pr(R_{ij}=1|R_{i1}=\cdots R_{i,j-1}, X_{i}, Y_{i1},...,Y_{i,j-1})$
 
 
-
-## IPW-GEE {.smaller}
-
-$$
-R_{i} = (R_{i1},...,R_{in})^{T}
-$$
-$$
-D_{i}=1+\sum_{j=1}^{n}R_{ij}
-$$
-For example,
-
-* an individual who completes the study with no missed visits will have $Y_{i} = (Y_{i1},...,Y_{in})^{T}$ and $D_{i}=n+1$
-* an individual who drops out after the third visit will have $Y^{O}_{i} = (Y_{i1},Y_{i2},Y_{i3})^{T}$ and $D_{i}=3+1=4$
 
 
 ## IPW-GEE {.smaller}
 
+::: {style="font-size: 90%;"}
 
 The IPW-GEE estimator is obtained as the solution to the following **weighted** estimating equations:
 
 $$
 \sum_{i=1}^{N}D_{i}^{T}V_{i}^{-1}W_{i}(Y_{i}-\mu)=0,
 $$
+
+
 where
 
 * $D_{i}$ is the $n \times p$ derivative matrix
@@ -210,9 +204,12 @@ R_{i1}\times w_{i1} & 0 & ... & 0\\
 \end{array}\right)
 $$
 
-The weight, $w_{ij}$ is the inverse of the **unconditional** probability of being observed at the $j$th occasion.
+
+:::
 
 ## IPW-GEE {.smaller}
+
+::: {style="font-size: 90%;"}
 
 To calculate these weights, let $\pi_{ij}$ denote the **conditional** probability of the $i$th individual being observed (or not dropping out) at the $j$th occasion, given that this individual was observed at the prior occasions.
 
@@ -232,6 +229,7 @@ $$
 w_{ij} = (\pi_{i1} \times \pi_{i2} \times \cdots \times \pi_{ij})^{-1}.
 $$
 
+:::
 
 
 ## Estimation of weights {.smaller}
@@ -324,7 +322,7 @@ dropcoef <- summary(rmod)$coef[,1]
 
 
 
-## Compute IPW
+## Compute IPW {.smaller}
 
 First, compute the predicted $\text{logit}(\hat\pi_{ij})$ from the dropout model.
 $$
@@ -724,13 +722,15 @@ jmcox <- coxph(Surv(Time, death) ~ drug, x = TRUE,
 # summary(jmaids)
 ```
 
-<div class = "blue">
+
+
+
 <a>**Interpretation of the survival model** </a> 
 
 * The hazard of death is 1.40 (95% CI: 1.03; 1.90) times higher among patients receiving ddI compared to patients receiving ddC
 * One unit **decrease** in CD4 cell count corresponds to a 1.33-fold increase in the risk of death (95% CI: 1.24; 1.43)
 
-</div>
+
 
 
 
