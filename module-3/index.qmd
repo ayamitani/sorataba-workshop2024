@@ -15,6 +15,7 @@ library(here)
 library(tidyverse)
 library(nlme)
 library(lme4)
+library(geepack)
 library(kableExtra)
 library(gtsummary)
 library(texreg)
@@ -27,7 +28,7 @@ theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font si
 
 # Linear mixed effects models
 
-## Linear mixed effects models
+## Linear mixed effects models{.smaller}
 
 * So far, we have discussed models for longitudinal data where changes in the mean response can be expressed as,
 
@@ -40,7 +41,7 @@ and where the primary goal is to make inferences about the population regression
 
 * We now consider an alternative, but closely related, approach for analyzing longitudinal data using **linear mixed effects models**
 
-## Basic concept
+## Basic concept{.smaller}
 
 * Some subset of the regression parameters **vary randomly** from one individual (cluster) to another, thereby accounting for sources of **natural heterogeneity** in the population
 * Individuals in the population are assumed to have their own **subject-specific** mean response trajectories over time
@@ -183,7 +184,7 @@ ggplot(data = dentallong, aes(x = age, y = distance, color = gender)) +
 $$
 Y_{ij} = \beta_{0} + \beta_{1}\text{Age}^{*}_{ij} + \beta_{2}\text{Gender}_{i} + \beta_{3}\text{Age}^{*}_{ij} \times \text{Gender}_{i} + b_i + \epsilon_{ij}
 $$
-where $\small \text{Age}^{*} = \text{Age} - 8 \in (0,2,4,6)$.
+where $\text{Age}^{*} = \text{Age} - 8 \in (0,2,4,6)$.
 
 ## Example: LMM in R
 
@@ -509,23 +510,18 @@ ggplot(data = preds, aes(x = agestar, y = condmean, group = id)) +
 
 ## Random intercepts and covariance pattern model{.smaller}
 
-* We can introduce more flexibility by explicitly by modeling the correlation structure in $\small R_{i}$
-  - i.e. Move beyond $\small  R_{i} = \sigma^{2}I_{n_{i}}$ and permit the $\small \epsilon_{i}$ to be correlated
+* We can introduce more flexibility by explicitly by modeling the correlation structure in $R_{i}$, i.e. move beyond $ R_{i} = \sigma^{2}I_{n_{i}}$ and permit the $\epsilon_{i}$ to be correlated
 * The hybrid random intercepts and covariance pattern model looks like:
 $$
 Y_{ij} = X^{T}_{ij}\beta + b_{0i} + U_{i}(t_{ij}) + \epsilon^{*}_{ij},
 $$
 where
-  - $\small b_{0i}$ is an individual-specific random intercept with $\small E(b_{0i})=0$ and $\small \text{Var}(b_{0i}) = \sigma^{2}_{b}$
-  - $\small U_{i}(t_{ij})$ is a covariance pattern (serial dependence) term 
-  - We assume $\small E(\epsilon^{*}_{ij})=0$ and $\small \text{Var}(\epsilon^{*}_{ij}) = \sigma^{2}$
-  - Finally, we assume $\small U_{i}(t_{ij})$ are assumed to have a normal distribution, with zero mean, variance $\small \sigma^{2}_{u}$, and correlation
-$$
-\text{Corr}\left\{U_{i}(t_{ij}),U_{i}(t_{ik})\right\} = \rho(|t_{ij}-t_{ik}|).
-$$
+  - $b_{0i}$ is an individual-specific random intercept with $E(b_{0i})=0$ and $\text{Var}(b_{0i}) = \sigma^{2}_{b}$
+  - $U_{i}(t_{ij})$ is a covariance pattern (serial dependence) term 
+  - We assume $E(\epsilon^{*}_{ij})=0$ and $\text{Var}(\epsilon^{*}_{ij}) = \sigma^{2}$
+  - Finally, we assume $U_{i}(t_{ij})$ are assumed to have a normal distribution, with zero mean, variance $\sigma^{2}_{u}$, and correlation: $\text{Corr}\left\{U_{i}(t_{ij}),U_{i}(t_{ik})\right\} = \rho(|t_{ij}-t_{ik}|)$
 
-
-* Note that $\small \epsilon^{*}_{ij}$ captures the variation in error terms beyond that is explained by $\small U_{i}(t_{ij})$
+* $\epsilon^{*}_{ij}$ captures the variation in error terms beyond that is explained by $U_{i}(t_{ij})$
 
 
 ## Example: random intercepts + auto-regressive errors {.smaller}
@@ -666,5 +662,296 @@ coefmat %>%
 
 * $\hat\beta_{3}$ are very similar across all models
 * Model 6 has the smallest standard errors
+
+
+# Generalized linear mixed effects models
+
+## Generalized linear mixed effects models{.smaller}
+
+* GLMs can be extended to longitudinal (clustered) data by allowing a subset of the regression coefficients to **vary randomly** from one individual (cluster) to another
+* The concept of GLMMs are similar to LMM
+  + However, introduction of random effects in GLMs is more complicated
+
+GLMM formulation
+
+$$
+g\left\{E(Y_{ij}|b_{i})\right\} = X_{ij}^{T}\beta + Z_{ij}^{T}b_{i}
+$$
+
+
+## Interpretation of regression parameters{.smaller}
+
+* The introduction of random effects has important implications for the interpretation of the regression coefficients, $\beta$, in GLMM
+* In GLMM, $\beta$ has **subject-specific** interpretations
+* $\beta$ represents the **within-subject** changes in covariates on changes in an individual's **transformed** mean response, while holding the remaining covariates constant
+
+For example, consider a simple logistic regression model with randomly varying intercepts:
+$$
+\text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i})}{\Pr(Y_{ij}=0|b_{i})}\right\} = \beta_{1} + \beta_{2}X_{ij} + b_{i},
+$$
+where $b_{i} \sim N(0, g_{11})$.
+
+## Interpretation of regression parameters{.smaller}
+
+When $X_{ij} = x$, then the log odds of a positive response $Y_{ij}=1$ is
+$$
+\text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x)}\right\} = \beta_{1} + \beta_{2}x + b_{i}.
+$$
+Similarly, when $X_{ij}=x+1$, then the log odds of $Y_{ij}=1$ is
+$$
+\text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x+1)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x+1)}\right\} = \beta_{1} + \beta_{2}(x+1) + b_{i}.
+$$
+For any individual $i$, the **difference in log odds** of a positive response for a unit increase in $X_{ij}$ is
+$$
+\begin{aligned}
+\text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x+1)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x+1)}\right\} &- \text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x)}\right\} \\
+&= \beta_{1} + \beta_{2}(x+1) + b_{i} - \left\{\beta_{1} + \beta_{2}x + b_{i}\right\} \\
+&= \beta_{2}.
+\end{aligned}
+$$
+
+## Interpretation of regression parameters{.smaller}
+Furthermore,
+$$
+\begin{aligned}
+\text{log}\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x+1)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x+1)} \bigg/ \frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x)}\right\}
+&= \beta_{2} \\
+\left\{\frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x+1)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x+1)} \bigg/ \frac{\Pr(Y_{ij}=1|b_{i}, X_{ij}=x)}{\Pr(Y_{ij}=0|b_{i}, X_{ij}=x)}\right\}
+&= e^{\beta_{2}}.
+\end{aligned}
+$$
+Therefore, $e^{\beta_{2}}$ is the odds ratio of a positive response for a unit increase in $X_{ij}$ for any given **individual** having some unobservable underlying propensity to respond positively, $b_{i}$.
+
+
+
+## Subject-specific covariatess{.smaller}
+
+* Because the components of the fixed effects, $\beta$, have interpretations that depend on holding $b_{i}$ fixed, they are often referred to as **subject-specific** regression coefficients
+* The subject-specific interpretations of $\beta$ is more natural for covariates that **vary within an individual** (within-subject or time-varying covariates).
+  + For example, age, BMI, smoking status, etc.
+  + But covariates are assumed to be independent of the random effects (**assumption of endogeneity**) $\rightarrow$ more on this next week
+  + Interpretation of $\beta$ is the change in an **individual's log odds of response** for a unit increase in $X_{ij}$
+  
+
+
+## Between-subject covariatess{.smaller}
+
+* What if $X_{ij}$ is a between-subject covariate, such as gender, treatment, or exposure group?
+* Then, the change in the value of the covariate requires also a change in index $i$ of $X_{ij}$ to $X_{i'j}$ for $i \neq i'$
+  + However, $\beta$ then becomes confounded with $b_{i} - b_{i'}$
+  + So we need to assume $b_{i} = b_{i'}$
+  + The interpretation of $\beta$ is the change in log odds of response for two different individuals who **happen to have the same value** for the random effect, but who differ by one unit in the covariate $X_{ij}$
+
+
+
+## Special case of the identity link functions{.smaller}
+
+* GLMM with the identity link function is equivalent to LMM
+* With the identity link function, the regression coefficients in the model for the conditional means,
+$$
+E(Y_{ij}|X_{ij}, b_{i}) = X_{ij}^{T}\beta + Z_{ij}^{T}b_{i},
+$$
+also happen to have interpretation in terms of the population means, since
+$$
+\begin{aligned}
+E(Y_{ij}|X_{ij}) &= E\left\{E(Y_{ij}|X_{ij}, b_{i})\right\} \\
+&= E(X_{ij}^{T}\beta + Z_{ij}^{T}b_{i}) \\
+&= X_{ij}^{T}\beta + Z_{ij}^{T}E(b_{i}) \\
+&= X_{ij}^{T}\beta
+\end{aligned}
+$$
+when averaged over all individuals in the study population.
+
+## GLMM with non-identity link functions{.smaller}
+
+However, for the non-identity link function, such as logit($\cdot$) or log($\cdot$), that are usually adopted for discrete responses, this relationship no longer holds. That is, if
+$$
+g\left\{E(Y_{ij}|X_{ij}, b_{i})\right\} =  X_{ij}^{T}\beta + Z_{ij}^{T}b_{i}
+$$
+where $g(\cdot)$ is a non-identity link function, then
+$$
+g\left\{E(Y_{ij}|X_{ij})\right\} \neq  X_{ij}^{T}\beta. 
+$$
+
+For non-identity link functions, the regression coefficients in GLMM and **marginal models** have quite distinct interpretations, and they have different targets of inference.
+
+
+## Example: Respiratory study {.smaller}
+Percent of good respiratory status over time by clinic
+```{r}
+resp <- read.table(here("datasets", "respir.txt"), header = TRUE)
+respl <- resp %>%
+  pivot_longer(cols = starts_with("y"),
+               names_to = "visit",
+               names_prefix = "y",
+               values_to = "resp") %>%
+  mutate(visit = as.numeric(visit),
+         trt1 = ifelse(trt == "A", 1, 0),
+         clinic2 = ifelse(clinic == 2, 1, 0))
+respl %>%
+  group_by(visit, trt, clinic) %>%
+  mutate(pcty = mean(resp)) %>%
+  ggplot(aes(y = pcty, x = visit, color = as.factor(trt))) +
+  geom_point(size = 2.5) + 
+  geom_line(size = 1.5) + 
+  facet_grid(~clinic) + 
+  ylim(0,1) + 
+  labs(y = "Percent of good respiratory status", x = "Visit", color = "Treatment")
+```
+
+## Example: Random intercepts model {.smaller}
+
+* In R, the `glmer()` function in `lme4` package is most popular for GLMM
+
+```{r}
+#| echo: TRUE
+
+glmm1 <- glmer(resp ~ trt1 + visit + clinic2 + (1|id),
+                data = respl,
+                nAGQ = 50, # number of quadrature points (default is 1)
+                family = binomial("logit"))
+```
+
+* In maximum likelihood estimation, GLMM has **no closed-form solutions**
+* Instead, we use a **numerical integration technique** called **Gaussian quadrature** to approximate the marginal likelihood as a weighted sum with the number of **quadrature points**, $K$
+
+* When $K = 1$, this technique is referred to as **Laplace** approximation
+* The higher the $K$, the more accurate the approximation will be
+* But the computational burden also increases with increasing $K$
+  + `nAGQ > 1` option in `glmer()` is only available for random intercepts model
+
+## Example: Random intercepts model {.smaller}
+```{r}
+#| echo: TRUE
+summary(glmm1)
+```
+
+
+
+## Intra-cluster correlation{.smaller}
+For binary GLMM, we can assume that $Y_{ij}$ is generated by an **unobserved latent continuous variable**, $L_{ij}$, such that
+$$
+L_{ij} = X_{ij}\beta + b_{j} + \epsilon_{ij}
+$$
+where $b_{j}\sim N(0,\sigma^{2}_{b})$, and $\epsilon_{ij}\sim Logistic(0,1)$ with $\text{var}(\epsilon_{ij})=\pi^{2}/3$.
+
+* Without loss of generosity, we can assume that
+$$
+Y_{ij}=
+\begin{cases}
+1 \text{ if } L_{ij}>0 \\
+0 \text{ if } L_{ij}\leq 0
+\end{cases} \quad
+$$
+* We can then quantify the relative magnitudes of the between-cluster and within-cluster sources of variability using the intra-cluster correlation
+$$
+\rho = \text{Corr}(L_{ij}, L_{i'j}) = \frac{\sigma^{2}_{b}}{\sigma^{b}_{2}+\pi^{2}/3}  = \frac{5.039}{5.039+\pi^{2}/3} = 0.605
+$$
+* Note that $\rho$ is the marginal correlation among the latent variables $L_{ij}$ and $L_{i'j}$ and **not** the marginal correlation among the observed variables $Y_{ij}$ and $Y_{i'j}$ 
+
+## Comparing marginal vs conditional model
+
+* In module 2, we fit a marginal model with working exchangeable assumption
+* ORs between marginal and conditional models are quite different
+
+```{r}
+model3ex <- geeglm(resp ~ trt1 + visit + clinic2,
+                 id = id,
+                 family = binomial(link = "logit"),
+                 corstr = "exchangeable",
+                 scale.fix = TRUE,
+                 data = respl)
+tblex <- model3ex %>%
+  tbl_regression(exponentiate = TRUE)
+tblglmm1 <- glmm1 %>%
+  tbl_regression(exponentiate = TRUE)
+# merge tables
+tbl_merge_ex1 <-
+  tbl_merge(
+    tbls = list(tblex, tblglmm1),
+    tab_spanner = c("**Marginal model**", "**Conditional model**")
+  ) %>%
+  modify_header(label = "**Variable**")
+tbl_merge_ex1
+```
+
+## Example: Random intercepts and slopes model{.smaller}
+
+* Need to use the default **Laplace** approximation 
+
+```{r}
+#| echo: TRUE
+glmm2 <- glmer(resp ~ trt1 * visit + clinic2 + (1 + visit|id),
+                data = respl,
+                family = binomial("logit"))
+summary(glmm2)
+```
+
+## Example: Nested random effects{.smaller}
+
+* Instead of including the clinic effect as a fixed effect, we can include it as a random effect 
+* We will fit the following **three-level** GLMM
+$$
+\begin{aligned}
+\text{logit}\left\{E(Y_{ijk}|b^{(3)}_{k},b^{(2)}_{ik})\right\}&=\beta_1 + \beta_2 \text{Trt}_i + \beta_3 \text{Visit}_{ij} +b^{(2)}_{ik} + b^{(3)}_{k}
+\end{aligned}
+$$
+where $Y_{ijk}=1$ if patient $i$ in clinic $k$ at time $j$ has the outcome and $Y_{ijk} =0$ otherwise and $b_{ik}^{(2)} \sim N(0, \sigma_{2}^2)$, $b_{k}^{(3)} \sim N(0,\sigma_{3}^2)$.
+
+```{r}
+#| echo: TRUE
+glmm3 <- glmer(resp ~ trt1 * visit + (1|id) + (1|clinic2),
+                data = respl,
+                family = binomial("logit"))
+```
+
+## Example: Nested random effects{.smaller}
+```{r}
+#| echo: TRUE
+
+summary(glmm3)
+```
+
+## Example: Intra-class correlation {.smaller}
+What is the correlation between patient $i$ and patient $i'$ in the same clinic $k$?
+
+Note that
+$$
+\begin{aligned}
+\text{Cov}(L_{ijk}, L_{i'jk}) 
+&= \text{Cov}(b_{ik}^{(2)}+b_{k}^{(3)}+\epsilon_{ijk}, b_{ik}^{(2)}+b_{k}^{(3)}+\epsilon_{i'jk}) \\
+&= \text{Cov}(b_{ik}^{(2)},b_{ik}^{(2)}) + \text{Cov}(b_{k}^{(3)},b_{k}^{(3)}) \\
+&= \text{Var}(b_{ik}^{(2)}) + \text{Var}(b_{k}^{(3)}) \\
+&= \sigma_{2}^{2} +  \sigma_{3}^{2},
+\end{aligned}
+$$
+
+and 
+$$
+\begin{aligned}
+\text{Var}(L_{ijk})&=\text{Var}(b_{ik}^{(2)}+b_{k}^{(3)}+\epsilon_{ijk})\\
+&=\text{Var}(b_{ik}^{(2)})+\text{Var}(b_{k}^{(3)})+\pi^2/3\\
+&= \sigma_{2}^{2} +  \sigma_{3}^{2}+\pi^2/3,
+\end{aligned}
+$$
+
+## Example: Intra-class correlation {.smaller}
+
+which means that
+$$
+\begin{aligned}
+\text{Corr}(Y_{ijk}, Y_{i'jk}) 
+&= \frac{\hat\sigma_{2}^{2} +  \hat\sigma_{3}^{2}}{\sqrt{(\hat\sigma_{2}^{2} +  \hat\sigma_{3}^{2}+\pi^2/3)(\hat\sigma_{2}^{2} + \hat\sigma_{3}^{2}+\pi^2/3)}}.
+\end{aligned}
+$$
+Therefore,
+```{r}
+sum.glmm3 <- summary(glmm3)
+sum.glmm3$varcor
+var2 <- as.numeric(sum.glmm3$varcor$id)
+var3 <- as.numeric(sum.glmm3$varcor$clinic2)
+intracl <- (var2 + var3) / (var2 + var3 + pi^2/3)
+intracl
+```
 
 
