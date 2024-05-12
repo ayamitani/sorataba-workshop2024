@@ -12,9 +12,13 @@ format:
 ```{r}
 library(here)
 library(tidyverse)
-library(geepack)
+library(nlme)
 library(lme4)
+library(geepack)
 library(kableExtra)
+library(gtsummary)
+library(texreg)
+library(AICcmodavg)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 
@@ -25,10 +29,12 @@ theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font si
 ## Background and housekeeping
 
 + Most of workshop materials is from CHL5222 Analysis of Correlated Data taught by me for last four years
-+ You should have received workshop materials in advance
-+ If there are errors (mostly likely there will be!), I will update materials and redistribute
++ Workshop materials are available from [https://github.com/ayamitani/sorataba-workshop2024]{https://github.com/ayamitani/sorataba-workshop2024}
++ You can view the online slides or follow along with `.qmd` files
++ If there are errors (mostly likely there will be!), I will update materials
 
-## Content of workshop
+
+## Contents of workshop
 + Workshop focuses on **application** rather than **theory**
 + Example data sets are unrealistically clean
   * Real world data are super messy
@@ -47,18 +53,6 @@ theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font si
 +	15:00-15:15 Afternoon Break
 +	15:15-16:45 **Module 4**
 +	16:45-17:00 Closing Remarks
-
-
-
-## example
-
-Example of introduction
-
-```{r}
-#| echo: True
-x <- c(1,2,3)
-```
-
 
 # Introduction
 
@@ -92,15 +86,15 @@ Correlation between data can arise from many sources:
   + Unbalanced study design: Otherwise
 
 
-## Sources of correlation
+## Sources of correlation in longitudinal data
 
 #### Between-individual heterogeneity
 * Natural variation in individuals' propensity to respond
   + Some individuals consistently respond higher than the average, while others consistently respond below the average
 * Variability among individuals in their response trajectories over time
-  + Some individuals ``gains" will be above the average, while others will be below the average
+  + Some individuals "gains" will be above the average, while others will be below the average
 
-## Sources of correlation in longitudinal data
+## Sources of correlation in longitudinal data{.smaller}
 
 #### Within-individual biological variation
 * Responses from the same individual vary over time
@@ -115,13 +109,6 @@ Correlation between data can arise from many sources:
     - high for self-reported measures like well-being and quality-of-life
 
 
-## Sources of correlation in longitudinal data
-
-**Within-individual (cluster) variation**
-
-* Using a more \alert{precise} or \alert{reliable} measurement procedure will result in repeated measurements with \alert{higher} correlations than if a less precise or reliable measurement procedure had been used
-* Many longitudinal studies do not have sufficient data to estimate \alert{both} within-individual biological variation and measurement error
-* For purposes of estimation, both sources of variation need to be combined into a single component of \alert{within-individual variance}
 
 
 
@@ -215,12 +202,12 @@ dentallong <- dental %>%
 dentallong
 ```
 
-## Discriptive analysis {.smaller}
-::: {.column width="49%"}
+## Descriptive analysis {.smaller}
+
 ```{r}
 #| echo: TRUE
-#| eval: FALSE
-library(kableExtra)
+#| output-location: column
+
 dentallong %>% 
   group_by(gender, age) %>% 
   summarise(n = n_distinct(id),
@@ -234,25 +221,7 @@ dentallong %>%
         gland to pteryomaxillary fissure by 
         gender and age") 
 ```
-:::
 
-::: {.column width="49%"}
-```{r}
-#| echo: FALSE
-#| eval: TRUE
-library(kableExtra)
-dentallong %>% 
-  group_by(gender, age) %>% 
-  summarise(n = n_distinct(id),
-            meandist = mean(distance), 
-            sddist = sd(distance)) %>%
-  kable(digits = 2,
-        col.names = c("Gender", "Age", "N", "Mean", "SD"),
-        caption = "Descriptive statistics of distance (mm) 
-        from center of pituitary gland to pteryomaxillary 
-        fissure by gender and age") 
-```
-:::
 
 ## Data visualization {.smaller}
 
@@ -297,18 +266,598 @@ dentallong %>%
   labs(y = "Distance", x = "Age", color = "Gender")
 ```
 
-# Analysis of longitudinal data
+# Analysis of correlated data
 
-### Modeling mean response
+## Matrix representation of correlated data{.smaller}
+
+#### Repeated outcomes
+
+Let $Y_{ij}$ denote the response variable for the $i$th cluster (individual) ($i=1,...,N$) at the $j$th unit (time) ($j=1,...,n_{i}$).
+Using vector notation, we can group the $n_{i}$ repeated measurements of cluster $i$ into a $n_{i}\times 1$ response vector:
+$$
+Y_{i}=
+\left(\begin{array}{c} 
+Y_{i1}\\
+Y_{i2}\\
+\vdots \\
+Y_{in_{i}}
+\end{array}\right), 
+\quad i = 1,...,N.
+$$
+
+## Matrix representation of longitudinal data{.smaller}
+
+#### Covariates
+
+::: {style="font-size: 85%;"}
+Associated with $Y_{ij}$, we have a $p \times 1$ vector of covariates
+
+$$
+X_{ij} = 
+\left(\begin{array}{c} 
+X_{ij1}\\
+X_{ij2}\\
+\vdots \\
+X_{ijp}
+\end{array}\right), \quad i = 1,...,N; j=1,...,n_{i}.
+$$
+We can group the vectors of covariates into a $n_{i}\times p$ matrix:
+
+$$
+X_{i}=
+\left(\begin{array}{c} 
+X_{i1}^{T}\\
+X_{i2}^{T}\\
+\vdots \\
+X_{ip}^{T}
+\end{array}\right)=
+\left(\begin{array}{cccc} 
+X_{i11} & X_{i12} & ... & X_{i1p}\\
+X_{i21} & X_{i22} & ... & X_{i2p}\\
+\vdots & \vdots & \ddots & \vdots \\
+X_{in_{i}1} & X_{in_{i}2} & ... & X_{in_{i}p}\\
+\end{array}\right), \quad i = 1,...,N.
+$$
+$X_{i}$ is simply an ordered collection of the values of the $p$ covariates for the $i$th cluster at all $n_{i}$ unit.
+
+
+:::
+
+## Covariance and correlation{.smaller}
+
+::: {style="font-size: 75%;"}
+
+Two aspects of longitudinal data complicate their statistical analysis:
+
+1) repeated measurements on the same cluster (individual) are usually **positively correlated**
+2) variability is often **heterogeneous** across measurements
+
+Standard linear regression models violate these assumptions!
+
+For the vector of repeated measures of the $i$th cluster, $Y_{i}=(Y_{i1}, Y_{i2},...,Y_{in})^{T}$, we define the variance-covariance matrix, $\text{Cov}(Y_{i})$ as
+$$
+\begin{aligned}
+\text{Cov}(Y_i) = \text{Cov}\left(\begin{array}{c} 
+Y_{i1}\\
+Y_{i2}\\
+\vdots \\
+Y_{in}
+\end{array}\right) &= 
+\left(\begin{array}{cccc} 
+\text{Var}({Y_{i1}}) & \text{Cov}(Y_{i1}, Y_{i2}) &...& \text{Cov}(Y_{i1}, Y_{in})\\
+\text{Cov}(Y_{i2}, Y_{i1}) & \text{Var}({Y_{i2}}) &...& \text{Cov}(Y_{i2}, Y_{in})\\
+\vdots & \vdots  & \ddots  & \vdots \\
+\text{Cov}(Y_{in}, Y_{i1}) & \text{Cov}(Y_{in}, Y_{i2}) & ... & \text{Var}({Y_{in}}) 
+\end{array}\right) \\ \\
+&=
+\left(\begin{array}{cccc} 
+\sigma_{1}^{2} & \sigma_{12} &...& \sigma_{1n}\\
+\sigma_{21} & \sigma_{2}^{2} &...& \sigma_{2n}\\
+\vdots & \vdots  & \ddots  & \vdots \\
+\sigma_{n1} & \sigma_{n2} & ... & \sigma_{n}^{2} 
+\end{array}\right) 
+\end{aligned}
+$$
+where $\text{Cov}(Y_{ij}, Y_{ik}) = \sigma_{jk} = \sigma_{kj} = \text{Cov}(Y_{ik}, Y_{ij})$.
+
+:::
+
+## Modeling correlated data{.smaller}
+
+When analyzing correlated data, we need to model two components:
+
+1) mean response over time
+2) covariance
+
+Models for correlated data must **jointly** specify models for the mean and covariance.
+
+<a>**Modeling the mean**</a>
+Two main approaches for modeling the mean are:
+
+* analysis of response profiles
+* parametric or semi-parametric curves
+
+<a>**Modeling the covariance**</a>
+Three broad approaches for modeling the covariance are:
+
+* "unstructured" or arbitrary pattern of covariance
+* covariance pattern models
+* random effects covariance structure
 
 
 
-### Modeling covariance
-
-
-## General Linear Model
+## General Linear Model for longitudinal data
 
 #### Linear trend over time
 
 * The **simplest** possible curve for describing changes in the mean response over time is a **straight line**
 * In this model the **slope** for time has a direct interpretation in terms of a **constant change** in the mean response for a single-unit change in time
+
+
+## Mean and variance functions for longitudinal{.smaller}
+
+With $i=1,...,N$ individuals measured at $j=1,...,n$ occasions and $p$ predictors, we can formulate a general linear regression model as:
+
+$$
+\boldsymbol{Y}_{i}= \boldsymbol{X}_{i}\boldsymbol{\beta} + \boldsymbol{\epsilon}_{i}, \quad i = 1,...,N.
+$$
+Note: From this point forward, I will *stop* expressing vectors and matrices using bold fonts, but please remember that generally, $Y_{i}$ is a vector of responses for individual $i$, $X_{i}$ is a matrix of predictors/covariates for individual $i$ and so on. 
+
+## Mean and variance functions for longitudinal{.smaller}
+
+We assume that 
+$$ E(\epsilon_{i}) = 0$$
+and $\epsilon_{i}$ has an **unknown** covariance structure, 
+
+$$
+\Sigma_{i} = 
+\text{Cov}(\epsilon_{i}) = 
+\left(\begin{array}{cccc} 
+\text{var}(\epsilon_{i1}) & \text{cov}(\epsilon_{i1}, \epsilon_{i2}) & ... &  \text{cov}(\epsilon_{i1}, \epsilon_{in})\\ \text{cov}(\epsilon_{i2}, \epsilon_{i1}) & \text{var}(\epsilon_{i2}) & ... &  \text{cov}(\epsilon_{i2}, \epsilon_{in})\\
+\vdots & \vdots & \ddots & \vdots\\
+\text{cov}(\epsilon_{in}, \epsilon_{i1}) & \text{cov}(\epsilon_{in}, \epsilon_{i2}) & ... & \text{var}(\epsilon_{in})
+\end{array}\right)
+$$ 
+
+## Mean and variance functions for longitudinal{.smaller}
+
+It follows that
+
+$$
+E(Y_{i}|X_{i}) = E({X}_{i}\beta + \epsilon_{i}) = E(X_{i}\beta) + E(\epsilon_{i}) = X_{i}\beta + 0 = X_{i}\beta  
+$$
+and 
+$$
+\text{Cov}(Y_{i}|X_{i}) = \text{Cov}({X}_{i}\beta + \epsilon_{i}) = \text{Cov}(\epsilon_{i}) = \Sigma_{i} = \Sigma_{i}(\theta)
+$$
+where $\theta$ is a $q \times 1$ vector of parameters that "make up" the structure for the covariance matrix $\Sigma_{i}$.
+
+Therefore, the response vector $Y_{i}$ is assumed to have a conditional distribution that is multivariate normal with mean $X_{i}\beta$ and covariance matrix $\Sigma_{i}(\theta)$:
+
+$$
+Y_{i}|X_{i} \sim MVN(X_{i}\beta, \Sigma_{i})
+$$
+
+
+## Model mean for dental study{.smaller}
+
+```{r}
+dental <- read.table(here("datasets", "dentalstudy.txt"), header = TRUE)
+dental %>%
+  pivot_longer(cols = starts_with("distance"),
+               names_to = "age",
+               # this removes "distance_age" from the values
+               names_prefix = "distance_age", 
+               values_to = "distance",
+  ) %>%
+  # convert id age gender to factor variables and assign levels 
+  mutate(age = factor(age, levels = c(8,10,12,14)), 
+         gender = factor(gender),
+         id = factor(id)) %>%
+  group_by(id) %>%
+  mutate(time = row_number()) %>%
+  ungroup %>%
+  ggplot(aes(x = age, y = distance, color = gender)) +
+  geom_point(size = 1.5) +    
+  # add mean trajectory for each treatment group
+  stat_summary(aes(group = gender), fun = mean, geom="line") + 
+  labs(y = "Distance", x = "Age", color = "Gender", fill = "Gender") + 
+  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Dark2")  
+```
+
+## Model mean for dental study{.smaller}
+
+#### A linear spline model with a knot at age 10 assuming most general covariance structure (for now)
+
+$$
+\begin{aligned}
+E(\text{Distance}_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
+\end{aligned}
+$$
+where $(x)_{+}$ is the *truncated line function* defined as
+
+$$
+(x)_{+} = 
+\begin{cases}
+x \quad \text{ if } x > 0 \\
+0 \quad \text{ otherwise}.
+\end{cases}
+$$
+
+Therefore,
+
+$$
+(\text{age}_{ij} - 10)_{+} = 
+\begin{cases}
+\begin{aligned}
+&\text{age}_{ij} - 10 &\text{when } \text{age}_{ij} > 10 \\
+&0 &\text{when } \text{age}_{ij} \le 10.
+\end{aligned}
+\end{cases}
+$$
+
+## Expected means{.smaller}
+
+Expected mean response for females prior to and after age $10$,
+
+$$
+\begin{aligned}
+E(\text{Distance}_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} 
+& \text{age}_{ij} \le 10;\\\\
+E(\text{Distance}_{ij}) &= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij} 
+& \text{age}_{ij} > 10.
+\end{aligned}
+$$
+
+Expected mean response for males prior to and after age $10$,
+
+$$
+\begin{aligned}
+E(\text{Distance}_{ij}) &= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij} 
+& \text{age}_{ij} \le 10;\\\\
+E(\text{Distance}_{ij}) &= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
+& \text{age}_{ij} > 10.
+\end{aligned}
+$$
+
+## Model mean for dental study {.smaller}
+
+```{r}
+#| echo: TRUE
+#| output-location: column
+
+knot <- 10 # let t* = age 10
+
+dentallong <- dental %>%
+  pivot_longer(cols = starts_with("distance"),
+               names_to = "age",
+               # this removes "distance_age" from the values
+               names_prefix = "distance_age", 
+               values_to = "distance",
+  ) %>%
+  group_by(id) %>%
+  mutate(time = row_number(),
+         # for this model, we want age as continuous
+         age = as.numeric(age), 
+         # make a 1/0 binary variable group
+         group = case_when(     
+           gender == "F" ~ 0,
+           gender == "M" ~ 1
+         ),
+         # code to apply truncated linear function
+         ageknot = (age - knot) * I(age >= knot)) %>% 
+  # same can be achieved by 
+  # ageknot = ifelse(age >= knot, age - knot, 0)
+  ungroup()
+
+dentallong[1:20,]
+```
+
+## Use `gls()` from `nlme` package{.smaller}
+```{r}
+#| echo: TRUE
+
+dentalpw <- gls(distance ~ group + age + ageknot + group * age + group * ageknot, 
+                # short hand form: distance ~ group * age + group * ageknot
+                corr=corSymm(form= ~ time | id), weights = varIdent(form = ~ 1 | time), 
+                data = dentallong)
+summary(dentalpw)
+```
+
+`gls()` function uses Restricted maximum likelihood estimation (REML) by default
+
+## Compare observed and expected means
+
+```{r}
+# design matrix
+mm <- model.matrix(distance ~ group + age + ageknot + group * age + group * ageknot, 
+                   data = dentallong)
+
+# compute expected means and standard errors
+predval <- predictSE(dentalpw, newdata = mm)
+
+# function to compute confidence interval from mean estimates and standard errors
+ci <- function(est, se, alpha, df){
+  loci <- est - se * qt(1 - alpha/2, df)
+  hici <- est + se * qt(1 - alpha/2, df)
+  out <- list(loci, hici)
+  a <- (1 - alpha) * 100
+  names(out) <- c(paste0("lo", a, "ci"), paste0("hi", a, "ci"))
+  return(out)
+}
+
+# compute confidence intervals
+pred95ci <- ci(predval$fit, predval$se.fit, alpha = 0.05, df = 102)
+pred90ci <- ci(predval$fit, predval$se.fit, alpha = 0.1, df = 102)
+pred85ci <- ci(predval$fit, predval$se.fit, alpha = 0.15, df = 102)
+
+# combine original data and expected means, etc and add observed means
+allpred <- as.data.frame(list(predval, pred95ci, pred90ci, pred85ci))
+dentpred <- cbind(dentallong, allpred) %>%
+  group_by(group, age) %>%
+  mutate(meandist = mean(distance)) %>%
+  ungroup
+
+# plot expected means and observed means with different shades for confidence intervals
+dentpred %>%
+  ggplot(aes(x = age, y = fit)) +
+  geom_ribbon(aes(ymin = lo95ci, ymax = hi95ci, fill = gender), alpha = .1) +
+  geom_ribbon(aes(ymin = lo90ci, ymax = hi90ci, fill = gender), alpha = .3) +
+  geom_ribbon(aes(ymin = lo85ci, ymax = hi85ci, fill = gender), alpha = .5) +
+  geom_line(aes(color = gender)) + 
+  labs(y = "Distance", x = "Age", color = "Gender", fill = "Gender") +
+  geom_point(aes(x = age, y = meandist, color = gender)) +
+  # applying different colors using RColorBrewer package (comes with ggplot2)
+  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Dark2")  
+```
+
+## Compare different mean models {.smaller}
+
+A simpler model
+
+$$
+\begin{aligned}
+E(\text{Distance}_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i} 
+\end{aligned}
+$$
+When comparing different mean models with the same covariance, use ML estimation.
+
+```{r}
+#| echo: TRUE
+dentpwML <- gls(distance ~ group * age + group * ageknot, 
+                corr=corSymm(form= ~ time | id), weights = varIdent(form = ~ 1 | time),
+                method = "ML", data = dentallong)
+dentlinML <- gls(distance ~ group * age, 
+                 corr=corSymm(form = ~ time | id), weights = varIdent(form = ~ 1 | time),
+                 method = "ML", data = dentallong)
+anova(dentpwML, dentlinML)
+```
+
+
+
+
+## Modelling the covariance{.smaller}
+
+* So far, our focus has been on **modeling the mean response** and we have been assuming the **unstructured** covariance matrix in our analyses of longitudinal data
+  + This is the most **general** type of covariance matrix that allows any arbitrary pattern of covariance among the repeated measures
+* Alternatively, we can impose more **structure** when modeling the covariance
+
+<a>**Modeling the covariance**</a>
+Three broad approaches for modeling the covariance are:
+
+* "unstructured" or arbitrary pattern of covariance
+* covariance pattern models
+* random effects covariance structure
+
+
+## Modelling the covariance{.smaller}
+
+* When an appropriate model for the covariance has been adopted, **correct standard errors** are obtained and **valid inferences** about the regression parameters can be made
+* Accounting for the covariance among repeated measures usually **increases efficiency** or the **precision** with which the regression parameters can be estimated
+  + The positive correlation among the repeated measures **reduces the variability** of the estimate of change over time within individuals
+* The choice of models for the mean response and the covariance are **interdependent**
+  + The covariance between any pair of **residuals**, say $Y_{ij} - \mu_{ij}(\beta)$ and $Y_{ik} - \mu_{ik}(\beta)$, depends on the model for the mean (i.e. depends on $\beta$)
+* Although the covariance among the repeated responses, is not usually of intrinsic interest, it cannot simply be ignored
+
+
+## Unstructured covariance{.smaller}
+
+* The unstructured covariance matrix assumes no explicit structure among the repeated responses, other than the homogeneity of covariance across different individuals
+  + $\Sigma_{i}(\theta) = \Sigma(\theta) \text{ for all } i$
+* Appropriate when the number of measurement occasions is **relatively small** and all individuals are measured at the **same set of occasions** (data is balanced)
+
+$$
+\text{Cov}(Y_{i}) =
+\left(\begin{array}{cccc} 
+\sigma_{1}^{2} & \sigma_{12} &...& \sigma_{1n}\\
+\sigma_{21} & \sigma_{2}^{2} &...& \sigma_{2n}\\
+\vdots & \vdots  & \ddots  & \vdots \\
+\sigma_{n1} & \sigma_{n2} & ... & \sigma_{n}^{2} 
+\end{array}\right) 
+$$
+
+* When $n$ measurement occasions, the unstructured covariance matrix has $n$ variance and $\frac{n\times (n+1)}{2}$ covariance parameters 
+  + $\theta = (\sigma^{2}_{1},...,\sigma_{n}^{2}, \sigma_{12},...,\sigma_{n(n-1)})$ is a vector of length $\frac{n\times (n+1)}{2}$
+  
+## Unstructured covariance{.smaller}
+
+<a>**Main advantage**</a>
+No assumptions are made about the patterns of variances and covariances
+
+
+<a>**Potential drawbacks**</a>
+
+* The number of variance parameters grows rapidly with the number of measurement occasions
+```{r}
+mo <- 1:20
+np <- function(n)n*(n-1)/2
+plot(np(mo), xlab = "Number of measurement occasions", ylab = "Number of parameters", col = "brown")
+```
+* When number of covariance parameters (length of $\theta$) is large, relative to sample size ($N$), estimation is likely to be **very unstable**
+* Problematic when there are **mistimed** measurements
+
+
+
+## Covariance pattern models{.smaller}
+
+* When sample size is **not sufficiently large** to estimate an unstructured covariance, we want to impose some **structure** on the covariance matrix
+* A subtle **balance** needs to be struck when attempting to impose some structure on the covariance matrix
+  + With too little structure, there may be **too many parameters** to be estimated with limited amount of data
+  + With too much structure, there is a potential risk of model **misspecification** 
+  + Both could result in **misleading inferences** concerning $\beta$
+* Classic tradeoff between **bias and variance**
+* Covariance pattern models have their basis in models for **serial correlation** originally developed for **time series** data
+
+## Compound symmetry (Exchangeable){.smaller}
+
+The compound symmetry structure assumes that variance is constant across occasions, say $\sigma^{2}$, and $\text{Corr}(Y_{ij}, Y_{ik}) = \rho$ for all $j$ and $k$.
+
+$$
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc} 
+1 & \rho & \rho & ...& \rho\\
+\rho & 1 & \rho & ... & \rho\\
+\rho & \rho & 1 & ... & \rho\\
+\vdots & \vdots & \vdots  & \ddots  & \vdots \\
+\rho & \rho & \rho & ... & 1\\
+\end{array}\right) 
+$$
+
+* **Very parsimonious**: only **two** parameters regardless of number of measurements occasions
+* Makes strong assumptions about the variance and correlation which is unappealing for longitudinal data
+  + But more appropriate for **clustered** data with no inherent order of units within the cluster $\rightarrow$ More on this later in the course!
+
+## Toeplitz{.smaller}
+
+The Toeplitz structure assumes that variance is constant across occasions ($\sigma^{2}$), and $\text{Corr}(Y_{ij}, Y_{i,j+k}) = \rho_{k}$ for all $j$ and $k$.
+
+$$
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc} 
+1 & \rho_{1} & \rho_{2} & ...& \rho_{n-1}\\
+\rho_{1} & 1 & \rho_{1} & ... & \rho_{n-2}\\
+\rho_{2} & \rho_{1} & 1 & ... & \rho_{n-3}\\
+\vdots & \vdots & \vdots  & \ddots  & \vdots \\
+\rho_{n-1} & \rho_{n-2} & \rho_{n-3} & ... & 1\\
+\end{array}\right) 
+$$
+
+* Assumes correlation among responses at **adjacent** measurement occasions is constant, $\rho_{1}$
+* Only appropriate when measurements are made at **equal** (or approximately equal) intervals of time
+
+
+## First-order autoregressive (AR1){.smaller}
+
+The AR1 structure assumes that variance is constant across occasions ($\sigma^{2}$), and $\text{Corr}(Y_{ij}, Y_{i,j+k}) = \rho^{k}$ for all $j$ and $k$.
+
+$$
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc} 
+1 & \rho & \rho^{2} & ...& \rho^{n-1}\\
+\rho & 1 & \rho & ... & \rho^{n-2}\\
+\rho^{2} & \rho & 1 & ... & \rho^{n-3}\\
+\vdots & \vdots & \vdots  & \ddots  & \vdots \\
+\rho^{n-1} & \rho^{n-2} & \rho^{n-3} & ... & 1\\
+\end{array}\right) 
+$$
+
+* **Very parsimonious**: only **two** parameters regardless of number of measurements occasions
+* Only appropriate when measurements are made at **equal** (or approximately equal) intervals of time
+
+
+
+## Heterogeneous variances{.smaller}
+
+* The compound symmetry, Toeplitz, and AR1 covariances assume that the variances are constant across time
+* This assumption can easily be relaxed by assuming a covariance structure model with **heterogeneous** variances, $\text{Var}(Y_{ij})=\sigma_{j}^{2}$. 
+  + We have been doing this in prior analyses.
+
+A heterogeneous AR1 covariance pattern model is given by
+
+$$
+\text{Cov}(Y_{i}) =
+\left(\begin{array}{ccccc} 
+\sigma_{1}^{2} & \rho\sigma_{1}\sigma_{2} & \rho^{2}\sigma_{1}\sigma_{3} & ...& \rho^{n-1}\sigma_{1}\sigma_{n}\\
+\rho\sigma_{1}\sigma_{2} & \sigma_{2}^{2} & \rho\sigma_{2}\sigma_{3} & ... & \rho^{n-2}\sigma_{2}\sigma_{n}\\
+\rho^{2}\sigma_{1}\sigma_{3} & \rho\sigma_{2}\sigma_{3} & \sigma_{3}^{2} & ... & \rho^{n-3}\sigma_{3}\sigma_{n}\\
+\vdots & \vdots & \vdots  & \ddots  & \vdots \\
+\rho^{n-1}\sigma_{1}\sigma_{n} & \rho^{n-2}\sigma_{2}\sigma_{n} & \rho^{n-3}\sigma_{3}\sigma_{n} & ... & \sigma_{n}^{2}\\
+\end{array}\right) 
+$$
+
+and has $n+1$ parameters ($n$ variance parameters and 1 correlation parameter).
+
+
+## Exponential{.smaller}
+
+When measurement occasions are **not** equally-spaced over time, autoregressive model can be **generalized** as follows.
+
+Let $\left\{t_{i1},...,t_{in}\right\}$ denote the observation times for the $i$th individual and assume that the variance is constant across all measurement occasions ($\sigma^{2}$), and
+$$
+\small
+\text{Corr}(Y_{ij}, Y_{ik})=\rho^{|t_{ij} - t_{ik}|},
+$$
+for $\rho \ge 0$.
+
+* Correlation between any pair of repeated measures decreases exponentially with the time separations between them
+* Exponential covariance model is **invariant** under linear transformation of the time scale
+  + If we replace time measured in "weeks" by time measured in "days", the same form of the covariance matrix holds
+
+
+## Options in `gls()` {.smaller}
+
+```{r}
+#| eval: FA:SE
+?corClasses
+```
+will give you a list of available types of correlation structures in the `nlme` package.
+
+| Structure         | R option                             |
+|-------------------|--------------------------------------|
+| Unstructured      | `corSymm(form = ~ t*|id)`            |
+| Compound symmetry | `corCompSymm(form = ~ t*|id)`        |
+| Toeplitz          | `corARMA(form = ~ t*|id, p=1, q=1)`  |
+| AR1               | `corAR1(form = ~ t*|id)`             |
+| Exponential       | `corExp(form = ~ t|id)`              |
+
+Note: `t*` is the measurement occasion and `t` is the actual time unit.
+
+
+## Choice among covariance pattern models {.smaller}
+
+The choice among the covariance pattern models can be made by comparing the **maximized likelihoods**.
+
+#### Likelihood ratio test (LRT)
+
+* When any pair of models is **nested**, a LRT statistic from **REML** log-likelihoods can be constructed that compares the *full* and *reduced* models
+  + For example: AR1 and compound symmetry are both nested within unstructured
+  + Another example: AR1 is nested within heterogeneous AR1
+
+## Choice among covariance pattern models {.smaller}
+
+#### Akaike information criterion (AIC)
+
+* Often we want to compare non-nested models for the covariance
+  + For example: AR1 vs compound symmetry
+* Select the model that **minimizes**
+$$
+AIC = -2(\hat{l}-c),
+$$
+where $\hat{l}$ is the maximized **REML** log-likelihood and $c$ is the number of covariance parameters (length of $\theta \text{ for } \Sigma_{i}(\theta)$)
+
+#### Bayesian information criterion (BIC)
+
+* Another criterion for **non-nested** models
+* Select the model that **minimizes**
+$$
+BIC = -2(\hat{l}-\text{log} \sqrt{N^{*}}c),
+$$
+where $N^{*} = N-p$ is the number of *effective* subjects for **REML** log-likelihood
+
+
+

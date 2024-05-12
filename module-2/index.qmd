@@ -13,11 +13,13 @@ format:
 ```{r}
 library(here)
 library(tidyverse)
-library(geepack)
+library(nlme)
 library(lme4)
+library(geepack)
 library(kableExtra)
 library(gtsummary)
 library(texreg)
+library(AICcmodavg)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font size for all ggplot 

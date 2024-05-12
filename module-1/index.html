@@ -8,7 +8,7 @@
 <link href="index_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="index_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.385">
+  <meta name="generator" content="quarto-1.3.450">
 
   <meta name="author" content="Aya mitani">
   <title>Module 1: Introduction, visualization, and general linear models</title>
@@ -31,7 +31,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -221,8 +221,7 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    padding-bottom: 0.5rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -406,12 +405,13 @@ Aya mitani
 <h2>Background and housekeeping</h2>
 <ul>
 <li>Most of workshop materials is from CHL5222 Analysis of Correlated Data taught by me for last four years</li>
-<li>You should have received workshop materials in advance</li>
-<li>If there are errors (mostly likely there will be!), I will update materials and redistribute</li>
+<li>Workshop materials are available from [https://github.com/ayamitani/sorataba-workshop2024]{https://github.com/ayamitani/sorataba-workshop2024}</li>
+<li>You can view the online slides or follow along with <code>.qmd</code> files</li>
+<li>If there are errors (mostly likely there will be!), I will update materials</li>
 </ul>
 </section>
-<section id="content-of-workshop" class="slide level2">
-<h2>Content of workshop</h2>
+<section id="contents-of-workshop" class="slide level2">
+<h2>Contents of workshop</h2>
 <ul>
 <li>Workshop focuses on <strong>application</strong> rather than <strong>theory</strong></li>
 <li>Example data sets are unrealistically clean
@@ -421,15 +421,20 @@ Aya mitani
 </ul></li>
 </ul>
 </section>
-<section id="todays-schedule" class="slide level2">
+<section id="todays-schedule" class="slide level2 smaller">
 <h2>Today’s schedule</h2>
-</section>
-<section id="example" class="slide level2">
-<h2>example</h2>
-<p>Example of introduction</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<ul>
+<li>08:15-9:00 Registration &amp; Breakfast</li>
+<li>9:00-09:15 Opening Remarks</li>
+<li>09:15-10:30 <strong>Module 1</strong></li>
+<li>10:30-10:45 Morning Break</li>
+<li>10:45-12:00 <strong>Module 2</strong></li>
+<li>12:00-13:30 Lunch, Poster Presentation Assessment &amp; Career Panel</li>
+<li>13:30-15:00 <strong>Module 3</strong></li>
+<li>15:00-15:15 Afternoon Break</li>
+<li>15:15-16:45 <strong>Module 4</strong></li>
+<li>16:45-17:00 Closing Remarks</li>
+</ul>
 </section>
 <section>
 <section id="introduction" class="title-slide slide level1 center">
@@ -472,8 +477,8 @@ Aya mitani
 </ul></li>
 </ul>
 </section>
-<section id="sources-of-correlation-2" class="slide level2">
-<h2>Sources of correlation</h2>
+<section id="sources-of-correlation-in-longitudinal-data" class="slide level2">
+<h2>Sources of correlation in longitudinal data</h2>
 <h4 id="between-individual-heterogeneity">Between-individual heterogeneity</h4>
 <ul>
 <li>Natural variation in individuals’ propensity to respond
@@ -482,11 +487,11 @@ Aya mitani
 </ul></li>
 <li>Variability among individuals in their response trajectories over time
 <ul>
-<li>Some individuals ``gains” will be above the average, while others will be below the average</li>
+<li>Some individuals “gains” will be above the average, while others will be below the average</li>
 </ul></li>
 </ul>
 </section>
-<section id="sources-of-correlation-in-longitudinal-data" class="slide level2">
+<section id="sources-of-correlation-in-longitudinal-data-1" class="slide level2 smaller">
 <h2>Sources of correlation in longitudinal data</h2>
 <h4 id="within-individual-biological-variation">Within-individual biological variation</h4>
 <ul>
@@ -507,15 +512,6 @@ Aya mitani
 <li>high for self-reported measures like well-being and quality-of-life</li>
 </ul></li>
 </ul></li>
-</ul>
-</section>
-<section id="sources-of-correlation-in-longitudinal-data-1" class="slide level2">
-<h2>Sources of correlation in longitudinal data</h2>
-<p><strong>Within-individual (cluster) variation</strong></p>
-<ul>
-<li>Using a more or measurement procedure will result in repeated measurements with correlations than if a less precise or reliable measurement procedure had been used</li>
-<li>Many longitudinal studies do not have sufficient data to estimate within-individual biological variation and measurement error</li>
-<li>For purposes of estimation, both sources of variation need to be combined into a single component of </li>
 </ul>
 </section>
 <section id="notation" class="slide level2">
@@ -596,8 +592,8 @@ Aya mitani
 <section id="example-1-study-of-dental-growth-1" class="slide level2 smaller">
 <h2>Example 1: Study of dental growth</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>dental <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="fu">here</span>(<span class="st">"datasets"</span>, <span class="st">"dentalstudy.txt"</span>), <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">head</span>(dental)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>dental <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="fu">here</span>(<span class="st">"datasets"</span>, <span class="st">"dentalstudy.txt"</span>), <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">head</span>(dental)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  id gender distance_age8 distance_age10 distance_age12 distance_age14
 1  1      F          21.0           20.0           21.5           23.0
@@ -607,7 +603,7 @@ Aya mitani
 5  5      F          21.5           23.0           22.5           23.5
 6  6      F          20.0           21.0           21.0           22.5</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">tail</span>(dental)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">tail</span>(dental)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   id gender distance_age8 distance_age10 distance_age12 distance_age14
 22 22      M          23.0           23.0           23.5           25.0
@@ -645,21 +641,21 @@ Aya mitani
 <section id="wide-to-long-data-format" class="slide level2 smaller">
 <h2>Wide to Long Data format</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb6-2"><a href="#cb6-2"></a>dentallong <span class="ot">&lt;-</span> dental <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"distance"</span>),</span>
-<span id="cb6-4"><a href="#cb6-4"></a>               <span class="at">names_to =</span> <span class="st">"age"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5"></a>               <span class="co"># this removes "distance_age" from the values</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a>               <span class="at">names_prefix =</span> <span class="st">"distance_age"</span>, </span>
-<span id="cb6-7"><a href="#cb6-7"></a>               <span class="at">values_to =</span> <span class="st">"distance"</span>,</span>
-<span id="cb6-8"><a href="#cb6-8"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a>  <span class="co"># convert age to numeric</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a>  <span class="fu">mutate</span>(<span class="at">age =</span> <span class="fu">as.numeric</span>(age)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a>  <span class="co"># create new variable indicating measurement occasion</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">row_number</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a>  <span class="fu">ungroup</span>()</span>
-<span id="cb6-15"><a href="#cb6-15"></a>dentallong</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb5-2"><a href="#cb5-2"></a>dentallong <span class="ot">&lt;-</span> dental <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"distance"</span>),</span>
+<span id="cb5-4"><a href="#cb5-4"></a>               <span class="at">names_to =</span> <span class="st">"age"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>               <span class="co"># this removes "distance_age" from the values</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>               <span class="at">names_prefix =</span> <span class="st">"distance_age"</span>, </span>
+<span id="cb5-7"><a href="#cb5-7"></a>               <span class="at">values_to =</span> <span class="st">"distance"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a>  <span class="co"># convert age to numeric</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a>  <span class="fu">mutate</span>(<span class="at">age =</span> <span class="fu">as.numeric</span>(age)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>  <span class="co"># create new variable indicating measurement occasion</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">row_number</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb5-15"><a href="#cb5-15"></a>dentallong</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 108 × 5
       id gender   age distance  time
@@ -678,37 +674,33 @@ Aya mitani
 </div>
 </div>
 </section>
-<section id="discriptive-analysis" class="slide level2 smaller">
-<h2>Discriptive analysis</h2>
-<div class="column" style="width:49%;">
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">library</span>(kableExtra)</span>
-<span id="cb8-2"><a href="#cb8-2"></a>dentallong <span class="sc">%&gt;%</span> </span>
-<span id="cb8-3"><a href="#cb8-3"></a>  <span class="fu">group_by</span>(gender, age) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-4"><a href="#cb8-4"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n_distinct</span>(id),</span>
-<span id="cb8-5"><a href="#cb8-5"></a>            <span class="at">meandist =</span> <span class="fu">mean</span>(distance), </span>
-<span id="cb8-6"><a href="#cb8-6"></a>            <span class="at">sddist =</span> <span class="fu">sd</span>(distance)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-7"><a href="#cb8-7"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>,</span>
-<span id="cb8-8"><a href="#cb8-8"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Gender"</span>, <span class="st">"Age"</span>, </span>
-<span id="cb8-9"><a href="#cb8-9"></a>                      <span class="st">"N"</span>, <span class="st">"Mean"</span>, <span class="st">"SD"</span>),</span>
-<span id="cb8-10"><a href="#cb8-10"></a>        <span class="at">caption =</span> <span class="st">"Descriptive statistics of </span></span>
-<span id="cb8-11"><a href="#cb8-11"></a><span class="st">        distance (mm) from center of pituitary </span></span>
-<span id="cb8-12"><a href="#cb8-12"></a><span class="st">        gland to pteryomaxillary fissure by </span></span>
-<span id="cb8-13"><a href="#cb8-13"></a><span class="st">        gender and age"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-<div class="column" style="width:49%;">
-<div class="cell">
+<section id="descriptive-analysis" class="slide level2 smaller">
+<h2>Descriptive analysis</h2>
+<div class="cell columns column-output-location">
+<div class="column">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>dentallong <span class="sc">%&gt;%</span> </span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">group_by</span>(gender, age) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n_distinct</span>(id),</span>
+<span id="cb7-4"><a href="#cb7-4"></a>            <span class="at">meandist =</span> <span class="fu">mean</span>(distance), </span>
+<span id="cb7-5"><a href="#cb7-5"></a>            <span class="at">sddist =</span> <span class="fu">sd</span>(distance)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>,</span>
+<span id="cb7-7"><a href="#cb7-7"></a>        <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Gender"</span>, <span class="st">"Age"</span>, </span>
+<span id="cb7-8"><a href="#cb7-8"></a>                      <span class="st">"N"</span>, <span class="st">"Mean"</span>, <span class="st">"SD"</span>),</span>
+<span id="cb7-9"><a href="#cb7-9"></a>        <span class="at">caption =</span> <span class="st">"Descriptive statistics of </span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="st">        distance (mm) from center of pituitary </span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="st">        gland to pteryomaxillary fissure by </span></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="st">        gender and age"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
 <div class="cell-output-display">
-<table data-quarto-postprocess="true">
+<table>
 <caption>Descriptive statistics of distance (mm) from center of pituitary gland to pteryomaxillary fissure by gender and age</caption>
 <thead>
 <tr class="header">
-<th style="text-align: left;" data-quarto-table-cell-role="th">Gender</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">Age</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">N</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">Mean</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">SD</th>
+<th style="text-align: left;">Gender</th>
+<th style="text-align: right;">Age</th>
+<th style="text-align: right;">N</th>
+<th style="text-align: right;">Mean</th>
+<th style="text-align: right;">SD</th>
 </tr>
 </thead>
 <tbody>
@@ -770,8 +762,6 @@ Aya mitani
 </tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
 </div>
@@ -780,52 +770,622 @@ Aya mitani
 <h2>Data visualization</h2>
 <h4 id="violin-plots-with-boxplots">Violin plots with boxplots</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>dentallong <span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(age), <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a>    <span class="fu">geom_violin</span>() <span class="sc">+</span></span>
-<span id="cb9-4"><a href="#cb9-4"></a>    <span class="fu">geom_boxplot</span>(<span class="at">width =</span> <span class="fl">0.1</span>) <span class="sc">+</span> </span>
-<span id="cb9-5"><a href="#cb9-5"></a>    <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>dentallong <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(age), <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="fu">geom_violin</span>() <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>    <span class="fu">geom_boxplot</span>(<span class="at">width =</span> <span class="fl">0.1</span>) <span class="sc">+</span> </span>
+<span id="cb8-5"><a href="#cb8-5"></a>    <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="index_files/figure-revealjs/unnamed-chunk-7-1.png" id="fig-539a35d47e664c97a50115a146a7f1bd-1" width="960" class="r-stretch quarto-figure-center"></section>
+<img data-src="index_files/figure-revealjs/unnamed-chunk-5-1.png" width="960" class="r-stretch"></section>
 <section id="data-visualization-1" class="slide level2 smaller">
 <h2>Data visualization</h2>
 <h4 id="spaghetti-plot">Spaghetti plot</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>dentallong <span class="sc">%&gt;%</span></span>
-<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span>    <span class="co"># draw points</span></span>
-<span id="cb10-4"><a href="#cb10-4"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> id)) <span class="sc">+</span>  <span class="co"># draw a line across each patient</span></span>
-<span id="cb10-5"><a href="#cb10-5"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>dentallong <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span>    <span class="co"># draw points</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> id)) <span class="sc">+</span>  <span class="co"># draw a line across each patient</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="index_files/figure-revealjs/unnamed-chunk-8-1.png" id="fig-539a35d47e664c97a50115a146a7f1bd-2" width="960" class="r-stretch quarto-figure-center"></section>
+<img data-src="index_files/figure-revealjs/unnamed-chunk-6-1.png" width="960" class="r-stretch"></section>
 <section id="data-visualization-2" class="slide level2 smaller">
 <h2>Data visualization</h2>
 <h4 id="scatterplot-with-mean-trajectory">Scatterplot with mean trajectory</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>dentallong <span class="sc">%&gt;%</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
-<span id="cb11-3"><a href="#cb11-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span>    </span>
-<span id="cb11-4"><a href="#cb11-4"></a>  <span class="co"># add mean trajectory for each treatment group</span></span>
-<span id="cb11-5"><a href="#cb11-5"></a>  <span class="fu">stat_summary</span>(<span class="fu">aes</span>(<span class="at">group =</span> gender), <span class="at">fun =</span> mean, <span class="at">geom=</span><span class="st">"line"</span>) <span class="sc">+</span> </span>
-<span id="cb11-6"><a href="#cb11-6"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>dentallong <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">y =</span> distance, <span class="at">color =</span> gender)) <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span>    </span>
+<span id="cb10-4"><a href="#cb10-4"></a>  <span class="co"># add mean trajectory for each treatment group</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a>  <span class="fu">stat_summary</span>(<span class="fu">aes</span>(<span class="at">group =</span> gender), <span class="at">fun =</span> mean, <span class="at">geom=</span><span class="st">"line"</span>) <span class="sc">+</span> </span>
+<span id="cb10-6"><a href="#cb10-6"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Distance"</span>, <span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">color =</span> <span class="st">"Gender"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="index_files/figure-revealjs/unnamed-chunk-9-1.png" id="fig-539a35d47e664c97a50115a146a7f1bd-3" width="960" class="r-stretch quarto-figure-center"></section></section>
+<img data-src="index_files/figure-revealjs/unnamed-chunk-7-1.png" width="960" class="r-stretch"></section></section>
 <section>
-<section id="analysis-of-longitudinal-data" class="title-slide slide level1 center">
-<h1>Analysis of longitudinal data</h1>
+<section id="analysis-of-correlated-data" class="title-slide slide level1 center">
+<h1>Analysis of correlated data</h1>
 
 </section>
-<h3 id="modeling-mean-response">Modeling mean response</h3>
-<h3 id="modeling-covariance">Modeling covariance</h3>
-<section id="general-linear-model" class="slide level2">
-<h2>General Linear Model</h2>
+<section id="matrix-representation-of-correlated-data" class="slide level2 smaller">
+<h2>Matrix representation of correlated data</h2>
+<h4 id="repeated-outcomes">Repeated outcomes</h4>
+<p>Let <span class="math inline">\(Y_{ij}\)</span> denote the response variable for the <span class="math inline">\(i\)</span>th cluster (individual) (<span class="math inline">\(i=1,...,N\)</span>) at the <span class="math inline">\(j\)</span>th unit (time) (<span class="math inline">\(j=1,...,n_{i}\)</span>). Using vector notation, we can group the <span class="math inline">\(n_{i}\)</span> repeated measurements of cluster <span class="math inline">\(i\)</span> into a <span class="math inline">\(n_{i}\times 1\)</span> response vector: <span class="math display">\[
+Y_{i}=
+\left(\begin{array}{c}
+Y_{i1}\\
+Y_{i2}\\
+\vdots \\
+Y_{in_{i}}
+\end{array}\right),
+\quad i = 1,...,N.
+\]</span></p>
+</section>
+<section id="matrix-representation-of-longitudinal-data" class="slide level2 smaller">
+<h2>Matrix representation of longitudinal data</h2>
+<h4 id="covariates">Covariates</h4>
+<div style="font-size: 85%;">
+<p>Associated with <span class="math inline">\(Y_{ij}\)</span>, we have a <span class="math inline">\(p \times 1\)</span> vector of covariates</p>
+<p><span class="math display">\[
+X_{ij} =
+\left(\begin{array}{c}
+X_{ij1}\\
+X_{ij2}\\
+\vdots \\
+X_{ijp}
+\end{array}\right), \quad i = 1,...,N; j=1,...,n_{i}.
+\]</span> We can group the vectors of covariates into a <span class="math inline">\(n_{i}\times p\)</span> matrix:</p>
+<p><span class="math display">\[
+X_{i}=
+\left(\begin{array}{c}
+X_{i1}^{T}\\
+X_{i2}^{T}\\
+\vdots \\
+X_{ip}^{T}
+\end{array}\right)=
+\left(\begin{array}{cccc}
+X_{i11} &amp; X_{i12} &amp; ... &amp; X_{i1p}\\
+X_{i21} &amp; X_{i22} &amp; ... &amp; X_{i2p}\\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+X_{in_{i}1} &amp; X_{in_{i}2} &amp; ... &amp; X_{in_{i}p}\\
+\end{array}\right), \quad i = 1,...,N.
+\]</span> <span class="math inline">\(X_{i}\)</span> is simply an ordered collection of the values of the <span class="math inline">\(p\)</span> covariates for the <span class="math inline">\(i\)</span>th cluster at all <span class="math inline">\(n_{i}\)</span> unit.</p>
+</div>
+</section>
+<section id="covariance-and-correlation" class="slide level2 smaller">
+<h2>Covariance and correlation</h2>
+<div style="font-size: 75%;">
+<p>Two aspects of longitudinal data complicate their statistical analysis:</p>
+<ol type="1">
+<li>repeated measurements on the same cluster (individual) are usually <strong>positively correlated</strong></li>
+<li>variability is often <strong>heterogeneous</strong> across measurements</li>
+</ol>
+<p>Standard linear regression models violate these assumptions!</p>
+<p>For the vector of repeated measures of the <span class="math inline">\(i\)</span>th cluster, <span class="math inline">\(Y_{i}=(Y_{i1}, Y_{i2},...,Y_{in})^{T}\)</span>, we define the variance-covariance matrix, <span class="math inline">\(\text{Cov}(Y_{i})\)</span> as <span class="math display">\[
+\begin{aligned}
+\text{Cov}(Y_i) = \text{Cov}\left(\begin{array}{c}
+Y_{i1}\\
+Y_{i2}\\
+\vdots \\
+Y_{in}
+\end{array}\right) &amp;=
+\left(\begin{array}{cccc}
+\text{Var}({Y_{i1}}) &amp; \text{Cov}(Y_{i1}, Y_{i2}) &amp;...&amp; \text{Cov}(Y_{i1}, Y_{in})\\
+\text{Cov}(Y_{i2}, Y_{i1}) &amp; \text{Var}({Y_{i2}}) &amp;...&amp; \text{Cov}(Y_{i2}, Y_{in})\\
+\vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\text{Cov}(Y_{in}, Y_{i1}) &amp; \text{Cov}(Y_{in}, Y_{i2}) &amp; ... &amp; \text{Var}({Y_{in}})
+\end{array}\right) \\ \\
+&amp;=
+\left(\begin{array}{cccc}
+\sigma_{1}^{2} &amp; \sigma_{12} &amp;...&amp; \sigma_{1n}\\
+\sigma_{21} &amp; \sigma_{2}^{2} &amp;...&amp; \sigma_{2n}\\
+\vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\sigma_{n1} &amp; \sigma_{n2} &amp; ... &amp; \sigma_{n}^{2}
+\end{array}\right)
+\end{aligned}
+\]</span> where <span class="math inline">\(\text{Cov}(Y_{ij}, Y_{ik}) = \sigma_{jk} = \sigma_{kj} = \text{Cov}(Y_{ik}, Y_{ij})\)</span>.</p>
+</div>
+</section>
+<section id="modeling-correlated-data" class="slide level2 smaller">
+<h2>Modeling correlated data</h2>
+<p>When analyzing correlated data, we need to model two components:</p>
+<ol type="1">
+<li>mean response over time</li>
+<li>covariance</li>
+</ol>
+<p>Models for correlated data must <strong>jointly</strong> specify models for the mean and covariance.</p>
+<p><a href=""><strong>Modeling the mean</strong></a> Two main approaches for modeling the mean are:</p>
+<ul>
+<li>analysis of response profiles</li>
+<li>parametric or semi-parametric curves</li>
+</ul>
+<p><a href=""><strong>Modeling the covariance</strong></a> Three broad approaches for modeling the covariance are:</p>
+<ul>
+<li>“unstructured” or arbitrary pattern of covariance</li>
+<li>covariance pattern models</li>
+<li>random effects covariance structure</li>
+</ul>
+</section>
+<section id="general-linear-model-for-longitudinal-data" class="slide level2">
+<h2>General Linear Model for longitudinal data</h2>
 <h4 id="linear-trend-over-time">Linear trend over time</h4>
 <ul>
 <li>The <strong>simplest</strong> possible curve for describing changes in the mean response over time is a <strong>straight line</strong></li>
 <li>In this model the <strong>slope</strong> for time has a direct interpretation in terms of a <strong>constant change</strong> in the mean response for a single-unit change in time</li>
+</ul>
+</section>
+<section id="mean-and-variance-functions-for-longitudinal" class="slide level2 smaller">
+<h2>Mean and variance functions for longitudinal</h2>
+<p>With <span class="math inline">\(i=1,...,N\)</span> individuals measured at <span class="math inline">\(j=1,...,n\)</span> occasions and <span class="math inline">\(p\)</span> predictors, we can formulate a general linear regression model as:</p>
+<p><span class="math display">\[
+\boldsymbol{Y}_{i}= \boldsymbol{X}_{i}\boldsymbol{\beta} + \boldsymbol{\epsilon}_{i}, \quad i = 1,...,N.
+\]</span> Note: From this point forward, I will <em>stop</em> expressing vectors and matrices using bold fonts, but please remember that generally, <span class="math inline">\(Y_{i}\)</span> is a vector of responses for individual <span class="math inline">\(i\)</span>, <span class="math inline">\(X_{i}\)</span> is a matrix of predictors/covariates for individual <span class="math inline">\(i\)</span> and so on.</p>
+</section>
+<section id="mean-and-variance-functions-for-longitudinal-1" class="slide level2 smaller">
+<h2>Mean and variance functions for longitudinal</h2>
+<p>We assume that <span class="math display">\[ E(\epsilon_{i}) = 0\]</span> and <span class="math inline">\(\epsilon_{i}\)</span> has an <strong>unknown</strong> covariance structure,</p>
+<p><span class="math display">\[
+\Sigma_{i} =
+\text{Cov}(\epsilon_{i}) =
+\left(\begin{array}{cccc}
+\text{var}(\epsilon_{i1}) &amp; \text{cov}(\epsilon_{i1}, \epsilon_{i2}) &amp; ... &amp;  \text{cov}(\epsilon_{i1}, \epsilon_{in})\\ \text{cov}(\epsilon_{i2}, \epsilon_{i1}) &amp; \text{var}(\epsilon_{i2}) &amp; ... &amp;  \text{cov}(\epsilon_{i2}, \epsilon_{in})\\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+\text{cov}(\epsilon_{in}, \epsilon_{i1}) &amp; \text{cov}(\epsilon_{in}, \epsilon_{i2}) &amp; ... &amp; \text{var}(\epsilon_{in})
+\end{array}\right)
+\]</span></p>
+</section>
+<section id="mean-and-variance-functions-for-longitudinal-2" class="slide level2 smaller">
+<h2>Mean and variance functions for longitudinal</h2>
+<p>It follows that</p>
+<p><span class="math display">\[
+E(Y_{i}|X_{i}) = E({X}_{i}\beta + \epsilon_{i}) = E(X_{i}\beta) + E(\epsilon_{i}) = X_{i}\beta + 0 = X_{i}\beta  
+\]</span> and <span class="math display">\[
+\text{Cov}(Y_{i}|X_{i}) = \text{Cov}({X}_{i}\beta + \epsilon_{i}) = \text{Cov}(\epsilon_{i}) = \Sigma_{i} = \Sigma_{i}(\theta)
+\]</span> where <span class="math inline">\(\theta\)</span> is a <span class="math inline">\(q \times 1\)</span> vector of parameters that “make up” the structure for the covariance matrix <span class="math inline">\(\Sigma_{i}\)</span>.</p>
+<p>Therefore, the response vector <span class="math inline">\(Y_{i}\)</span> is assumed to have a conditional distribution that is multivariate normal with mean <span class="math inline">\(X_{i}\beta\)</span> and covariance matrix <span class="math inline">\(\Sigma_{i}(\theta)\)</span>:</p>
+<p><span class="math display">\[
+Y_{i}|X_{i} \sim MVN(X_{i}\beta, \Sigma_{i})
+\]</span></p>
+</section>
+<section id="model-mean-for-dental-study" class="slide level2 smaller">
+<h2>Model mean for dental study</h2>
+
+<img data-src="index_files/figure-revealjs/unnamed-chunk-8-1.png" width="960" class="r-stretch"></section>
+<section id="model-mean-for-dental-study-1" class="slide level2 smaller">
+<h2>Model mean for dental study</h2>
+<h4 id="a-linear-spline-model-with-a-knot-at-age-10-assuming-most-general-covariance-structure-for-now">A linear spline model with a knot at age 10 assuming most general covariance structure (for now)</h4>
+<p><span class="math display">\[
+\begin{aligned}
+E(\text{Distance}_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &amp;+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
+\end{aligned}
+\]</span> where <span class="math inline">\((x)_{+}\)</span> is the <em>truncated line function</em> defined as</p>
+<p><span class="math display">\[
+(x)_{+} =
+\begin{cases}
+x \quad \text{ if } x &gt; 0 \\
+0 \quad \text{ otherwise}.
+\end{cases}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+(\text{age}_{ij} - 10)_{+} =
+\begin{cases}
+\begin{aligned}
+&amp;\text{age}_{ij} - 10 &amp;\text{when } \text{age}_{ij} &gt; 10 \\
+&amp;0 &amp;\text{when } \text{age}_{ij} \le 10.
+\end{aligned}
+\end{cases}
+\]</span></p>
+</section>
+<section id="expected-means" class="slide level2 smaller">
+<h2>Expected means</h2>
+<p>Expected mean response for females prior to and after age <span class="math inline">\(10\)</span>,</p>
+<p><span class="math display">\[
+\begin{aligned}
+E(\text{Distance}_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij}
+&amp; \text{age}_{ij} \le 10;\\\\
+E(\text{Distance}_{ij}) &amp;= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij}
+&amp; \text{age}_{ij} &gt; 10.
+\end{aligned}
+\]</span></p>
+<p>Expected mean response for males prior to and after age <span class="math inline">\(10\)</span>,</p>
+<p><span class="math display">\[
+\begin{aligned}
+E(\text{Distance}_{ij}) &amp;= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij}
+&amp; \text{age}_{ij} \le 10;\\\\
+E(\text{Distance}_{ij}) &amp;= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
+&amp; \text{age}_{ij} &gt; 10.
+\end{aligned}
+\]</span></p>
+</section>
+<section id="model-mean-for-dental-study-2" class="slide level2 smaller">
+<h2>Model mean for dental study</h2>
+<div class="cell columns column-output-location">
+<div class="column">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>knot <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="co"># let t* = age 10</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a></span>
+<span id="cb11-3"><a href="#cb11-3"></a>dentallong <span class="ot">&lt;-</span> dental <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"distance"</span>),</span>
+<span id="cb11-5"><a href="#cb11-5"></a>               <span class="at">names_to =</span> <span class="st">"age"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6"></a>               <span class="co"># this removes "distance_age" from the values</span></span>
+<span id="cb11-7"><a href="#cb11-7"></a>               <span class="at">names_prefix =</span> <span class="st">"distance_age"</span>, </span>
+<span id="cb11-8"><a href="#cb11-8"></a>               <span class="at">values_to =</span> <span class="st">"distance"</span>,</span>
+<span id="cb11-9"><a href="#cb11-9"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">row_number</span>(),</span>
+<span id="cb11-12"><a href="#cb11-12"></a>         <span class="co"># for this model, we want age as continuous</span></span>
+<span id="cb11-13"><a href="#cb11-13"></a>         <span class="at">age =</span> <span class="fu">as.numeric</span>(age), </span>
+<span id="cb11-14"><a href="#cb11-14"></a>         <span class="co"># make a 1/0 binary variable group</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a>         <span class="at">group =</span> <span class="fu">case_when</span>(     </span>
+<span id="cb11-16"><a href="#cb11-16"></a>           gender <span class="sc">==</span> <span class="st">"F"</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb11-17"><a href="#cb11-17"></a>           gender <span class="sc">==</span> <span class="st">"M"</span> <span class="sc">~</span> <span class="dv">1</span></span>
+<span id="cb11-18"><a href="#cb11-18"></a>         ),</span>
+<span id="cb11-19"><a href="#cb11-19"></a>         <span class="co"># code to apply truncated linear function</span></span>
+<span id="cb11-20"><a href="#cb11-20"></a>         <span class="at">ageknot =</span> (age <span class="sc">-</span> knot) <span class="sc">*</span> <span class="fu">I</span>(age <span class="sc">&gt;=</span> knot)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-21"><a href="#cb11-21"></a>  <span class="co"># same can be achieved by </span></span>
+<span id="cb11-22"><a href="#cb11-22"></a>  <span class="co"># ageknot = ifelse(age &gt;= knot, age - knot, 0)</span></span>
+<span id="cb11-23"><a href="#cb11-23"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb11-24"><a href="#cb11-24"></a></span>
+<span id="cb11-25"><a href="#cb11-25"></a>dentallong[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 7
+      id gender   age distance  time group  ageknot
+   &lt;int&gt; &lt;chr&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;I&lt;dbl&gt;&gt;
+ 1     1 F          8     21       1     0        0
+ 2     1 F         10     20       2     0        0
+ 3     1 F         12     21.5     3     0        2
+ 4     1 F         14     23       4     0        4
+ 5     2 F          8     21       1     0        0
+ 6     2 F         10     21.5     2     0        0
+ 7     2 F         12     24       3     0        2
+ 8     2 F         14     25.5     4     0        4
+ 9     3 F          8     20.5     1     0        0
+10     3 F         10     24       2     0        0
+11     3 F         12     24.5     3     0        2
+12     3 F         14     26       4     0        4
+13     4 F          8     23.5     1     0        0
+14     4 F         10     24.5     2     0        0
+15     4 F         12     25       3     0        2
+16     4 F         14     26.5     4     0        4
+17     5 F          8     21.5     1     0        0
+18     5 F         10     23       2     0        0
+19     5 F         12     22.5     3     0        2
+20     5 F         14     23.5     4     0        4</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="use-gls-from-nlme-package" class="slide level2 smaller">
+<h2>Use <code>gls()</code> from <code>nlme</code> package</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>dentalpw <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">+</span> age <span class="sc">+</span> ageknot <span class="sc">+</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
+<span id="cb13-2"><a href="#cb13-2"></a>                <span class="co"># short hand form: distance ~ group * age + group * ageknot</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), </span>
+<span id="cb13-4"><a href="#cb13-4"></a>                <span class="at">data =</span> dentallong)</span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="fu">summary</span>(dentalpw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized least squares fit by REML
+  Model: distance ~ group + age + ageknot + group * age + group * ageknot 
+  Data: dentallong 
+       AIC      BIC    logLik
+  455.2452 497.2447 -211.6226
+
+Correlation Structure: General
+ Formula: ~time | id 
+ Parameter estimate(s):
+ Correlation: 
+  1     2     3    
+2 0.578            
+3 0.660 0.583      
+4 0.523 0.727 0.739
+Variance function:
+ Structure: Different standard deviations per stratum
+ Formula: ~1 | time 
+ Parameter estimates:
+        1         2         3         4 
+1.0000000 0.8800358 1.0791408 0.9622584 
+
+Coefficients:
+                  Value Std.Error   t-value p-value
+(Intercept)   17.188902  2.485646  6.915266  0.0000
+group          1.719649  3.228949  0.532572  0.5955
+age            0.502160  0.258826  1.940144  0.0551
+ageknot       -0.032163  0.298101 -0.107894  0.9143
+group:age     -0.009843  0.336225 -0.029276  0.9767
+group:ageknot  0.449226  0.387244  1.160058  0.2487
+
+ Correlation: 
+              (Intr) group  age    ageknt grop:g
+group         -0.770                            
+age           -0.973  0.749                     
+ageknot        0.882 -0.679 -0.924              
+group:age      0.749 -0.973 -0.770  0.711       
+group:ageknot -0.679  0.882  0.711 -0.770 -0.924
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-2.51980558 -0.65360368 -0.07447669  0.58689210  2.13631270 
+
+Residual standard error: 2.32045 
+Degrees of freedom: 108 total; 102 residual</code></pre>
+</div>
+</div>
+<p><code>gls()</code> function uses Restricted maximum likelihood estimation (REML) by default</p>
+</section>
+<section id="compare-observed-and-expected-means" class="slide level2">
+<h2>Compare observed and expected means</h2>
+
+<img data-src="index_files/figure-revealjs/unnamed-chunk-11-1.png" width="960" class="r-stretch"></section>
+<section id="compare-different-mean-models" class="slide level2 smaller">
+<h2>Compare different mean models</h2>
+<p>A simpler model</p>
+<p><span class="math display">\[
+\begin{aligned}
+E(\text{Distance}_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i}
+\end{aligned}
+\]</span> When comparing different mean models with the same covariance, use ML estimation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>dentpwML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
+<span id="cb15-2"><a href="#cb15-2"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
+<span id="cb15-3"><a href="#cb15-3"></a>                <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
+<span id="cb15-4"><a href="#cb15-4"></a>dentlinML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, </span>
+<span id="cb15-5"><a href="#cb15-5"></a>                 <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form =</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
+<span id="cb15-6"><a href="#cb15-6"></a>                 <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="fu">anova</span>(dentpwML, dentlinML)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Model df      AIC      BIC    logLik   Test  L.Ratio p-value
+dentpwML      1 16 448.5572 491.4713 -208.2786                        
+dentlinML     2 14 447.4770 485.0269 -209.7385 1 vs 2 2.919806  0.2323</code></pre>
+</div>
+</div>
+</section>
+<section id="modelling-the-covariance" class="slide level2 smaller">
+<h2>Modelling the covariance</h2>
+<ul>
+<li>So far, our focus has been on <strong>modeling the mean response</strong> and we have been assuming the <strong>unstructured</strong> covariance matrix in our analyses of longitudinal data
+<ul>
+<li>This is the most <strong>general</strong> type of covariance matrix that allows any arbitrary pattern of covariance among the repeated measures</li>
+</ul></li>
+<li>Alternatively, we can impose more <strong>structure</strong> when modeling the covariance</li>
+</ul>
+<p><a href=""><strong>Modeling the covariance</strong></a> Three broad approaches for modeling the covariance are:</p>
+<ul>
+<li>“unstructured” or arbitrary pattern of covariance</li>
+<li>covariance pattern models</li>
+<li>random effects covariance structure</li>
+</ul>
+</section>
+<section id="modelling-the-covariance-1" class="slide level2 smaller">
+<h2>Modelling the covariance</h2>
+<ul>
+<li>When an appropriate model for the covariance has been adopted, <strong>correct standard errors</strong> are obtained and <strong>valid inferences</strong> about the regression parameters can be made</li>
+<li>Accounting for the covariance among repeated measures usually <strong>increases efficiency</strong> or the <strong>precision</strong> with which the regression parameters can be estimated
+<ul>
+<li>The positive correlation among the repeated measures <strong>reduces the variability</strong> of the estimate of change over time within individuals</li>
+</ul></li>
+<li>The choice of models for the mean response and the covariance are <strong>interdependent</strong>
+<ul>
+<li>The covariance between any pair of <strong>residuals</strong>, say <span class="math inline">\(Y_{ij} - \mu_{ij}(\beta)\)</span> and <span class="math inline">\(Y_{ik} - \mu_{ik}(\beta)\)</span>, depends on the model for the mean (i.e.&nbsp;depends on <span class="math inline">\(\beta\)</span>)</li>
+</ul></li>
+<li>Although the covariance among the repeated responses, is not usually of intrinsic interest, it cannot simply be ignored</li>
+</ul>
+</section>
+<section id="unstructured-covariance" class="slide level2 smaller">
+<h2>Unstructured covariance</h2>
+<ul>
+<li>The unstructured covariance matrix assumes no explicit structure among the repeated responses, other than the homogeneity of covariance across different individuals
+<ul>
+<li><span class="math inline">\(\Sigma_{i}(\theta) = \Sigma(\theta) \text{ for all } i\)</span></li>
+</ul></li>
+<li>Appropriate when the number of measurement occasions is <strong>relatively small</strong> and all individuals are measured at the <strong>same set of occasions</strong> (data is balanced)</li>
+</ul>
+<p><span class="math display">\[
+\text{Cov}(Y_{i}) =
+\left(\begin{array}{cccc}
+\sigma_{1}^{2} &amp; \sigma_{12} &amp;...&amp; \sigma_{1n}\\
+\sigma_{21} &amp; \sigma_{2}^{2} &amp;...&amp; \sigma_{2n}\\
+\vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\sigma_{n1} &amp; \sigma_{n2} &amp; ... &amp; \sigma_{n}^{2}
+\end{array}\right)
+\]</span></p>
+<ul>
+<li>When <span class="math inline">\(n\)</span> measurement occasions, the unstructured covariance matrix has <span class="math inline">\(n\)</span> variance and <span class="math inline">\(\frac{n\times (n+1)}{2}\)</span> covariance parameters
+<ul>
+<li><span class="math inline">\(\theta = (\sigma^{2}_{1},...,\sigma_{n}^{2}, \sigma_{12},...,\sigma_{n(n-1)})\)</span> is a vector of length <span class="math inline">\(\frac{n\times (n+1)}{2}\)</span></li>
+</ul></li>
+</ul>
+</section>
+<section id="unstructured-covariance-1" class="slide level2 smaller">
+<h2>Unstructured covariance</h2>
+<p><a href=""><strong>Main advantage</strong></a> No assumptions are made about the patterns of variances and covariances</p>
+<p><a href=""><strong>Potential drawbacks</strong></a></p>
+<ul>
+<li>The number of variance parameters grows rapidly with the number of measurement occasions</li>
+</ul>
+
+<img data-src="index_files/figure-revealjs/unnamed-chunk-13-1.png" width="960" class="r-stretch"><ul>
+<li>When number of covariance parameters (length of <span class="math inline">\(\theta\)</span>) is large, relative to sample size (<span class="math inline">\(N\)</span>), estimation is likely to be <strong>very unstable</strong></li>
+<li>Problematic when there are <strong>mistimed</strong> measurements</li>
+</ul>
+</section>
+<section id="covariance-pattern-models" class="slide level2 smaller">
+<h2>Covariance pattern models</h2>
+<ul>
+<li>When sample size is <strong>not sufficiently large</strong> to estimate an unstructured covariance, we want to impose some <strong>structure</strong> on the covariance matrix</li>
+<li>A subtle <strong>balance</strong> needs to be struck when attempting to impose some structure on the covariance matrix
+<ul>
+<li>With too little structure, there may be <strong>too many parameters</strong> to be estimated with limited amount of data</li>
+<li>With too much structure, there is a potential risk of model <strong>misspecification</strong></li>
+<li>Both could result in <strong>misleading inferences</strong> concerning <span class="math inline">\(\beta\)</span></li>
+</ul></li>
+<li>Classic tradeoff between <strong>bias and variance</strong></li>
+<li>Covariance pattern models have their basis in models for <strong>serial correlation</strong> originally developed for <strong>time series</strong> data</li>
+</ul>
+</section>
+<section id="compound-symmetry-exchangeable" class="slide level2 smaller">
+<h2>Compound symmetry (Exchangeable)</h2>
+<p>The compound symmetry structure assumes that variance is constant across occasions, say <span class="math inline">\(\sigma^{2}\)</span>, and <span class="math inline">\(\text{Corr}(Y_{ij}, Y_{ik}) = \rho\)</span> for all <span class="math inline">\(j\)</span> and <span class="math inline">\(k\)</span>.</p>
+<p><span class="math display">\[
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc}
+1 &amp; \rho &amp; \rho &amp; ...&amp; \rho\\
+\rho &amp; 1 &amp; \rho &amp; ... &amp; \rho\\
+\rho &amp; \rho &amp; 1 &amp; ... &amp; \rho\\
+\vdots &amp; \vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\rho &amp; \rho &amp; \rho &amp; ... &amp; 1\\
+\end{array}\right)
+\]</span></p>
+<ul>
+<li><strong>Very parsimonious</strong>: only <strong>two</strong> parameters regardless of number of measurements occasions</li>
+<li>Makes strong assumptions about the variance and correlation which is unappealing for longitudinal data
+<ul>
+<li>But more appropriate for <strong>clustered</strong> data with no inherent order of units within the cluster <span class="math inline">\(\rightarrow\)</span> More on this later in the course!</li>
+</ul></li>
+</ul>
+</section>
+<section id="toeplitz" class="slide level2 smaller">
+<h2>Toeplitz</h2>
+<p>The Toeplitz structure assumes that variance is constant across occasions (<span class="math inline">\(\sigma^{2}\)</span>), and <span class="math inline">\(\text{Corr}(Y_{ij}, Y_{i,j+k}) = \rho_{k}\)</span> for all <span class="math inline">\(j\)</span> and <span class="math inline">\(k\)</span>.</p>
+<p><span class="math display">\[
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc}
+1 &amp; \rho_{1} &amp; \rho_{2} &amp; ...&amp; \rho_{n-1}\\
+\rho_{1} &amp; 1 &amp; \rho_{1} &amp; ... &amp; \rho_{n-2}\\
+\rho_{2} &amp; \rho_{1} &amp; 1 &amp; ... &amp; \rho_{n-3}\\
+\vdots &amp; \vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\rho_{n-1} &amp; \rho_{n-2} &amp; \rho_{n-3} &amp; ... &amp; 1\\
+\end{array}\right)
+\]</span></p>
+<ul>
+<li>Assumes correlation among responses at <strong>adjacent</strong> measurement occasions is constant, <span class="math inline">\(\rho_{1}\)</span></li>
+<li>Only appropriate when measurements are made at <strong>equal</strong> (or approximately equal) intervals of time</li>
+</ul>
+</section>
+<section id="first-order-autoregressive-ar1" class="slide level2 smaller">
+<h2>First-order autoregressive (AR1)</h2>
+<p>The AR1 structure assumes that variance is constant across occasions (<span class="math inline">\(\sigma^{2}\)</span>), and <span class="math inline">\(\text{Corr}(Y_{ij}, Y_{i,j+k}) = \rho^{k}\)</span> for all <span class="math inline">\(j\)</span> and <span class="math inline">\(k\)</span>.</p>
+<p><span class="math display">\[
+\text{Cov}(Y_{i}) =
+\sigma^{2}
+\left(\begin{array}{ccccc}
+1 &amp; \rho &amp; \rho^{2} &amp; ...&amp; \rho^{n-1}\\
+\rho &amp; 1 &amp; \rho &amp; ... &amp; \rho^{n-2}\\
+\rho^{2} &amp; \rho &amp; 1 &amp; ... &amp; \rho^{n-3}\\
+\vdots &amp; \vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\rho^{n-1} &amp; \rho^{n-2} &amp; \rho^{n-3} &amp; ... &amp; 1\\
+\end{array}\right)
+\]</span></p>
+<ul>
+<li><strong>Very parsimonious</strong>: only <strong>two</strong> parameters regardless of number of measurements occasions</li>
+<li>Only appropriate when measurements are made at <strong>equal</strong> (or approximately equal) intervals of time</li>
+</ul>
+</section>
+<section id="heterogeneous-variances" class="slide level2 smaller">
+<h2>Heterogeneous variances</h2>
+<ul>
+<li>The compound symmetry, Toeplitz, and AR1 covariances assume that the variances are constant across time</li>
+<li>This assumption can easily be relaxed by assuming a covariance structure model with <strong>heterogeneous</strong> variances, <span class="math inline">\(\text{Var}(Y_{ij})=\sigma_{j}^{2}\)</span>.
+<ul>
+<li>We have been doing this in prior analyses.</li>
+</ul></li>
+</ul>
+<p>A heterogeneous AR1 covariance pattern model is given by</p>
+<p><span class="math display">\[
+\text{Cov}(Y_{i}) =
+\left(\begin{array}{ccccc}
+\sigma_{1}^{2} &amp; \rho\sigma_{1}\sigma_{2} &amp; \rho^{2}\sigma_{1}\sigma_{3} &amp; ...&amp; \rho^{n-1}\sigma_{1}\sigma_{n}\\
+\rho\sigma_{1}\sigma_{2} &amp; \sigma_{2}^{2} &amp; \rho\sigma_{2}\sigma_{3} &amp; ... &amp; \rho^{n-2}\sigma_{2}\sigma_{n}\\
+\rho^{2}\sigma_{1}\sigma_{3} &amp; \rho\sigma_{2}\sigma_{3} &amp; \sigma_{3}^{2} &amp; ... &amp; \rho^{n-3}\sigma_{3}\sigma_{n}\\
+\vdots &amp; \vdots &amp; \vdots  &amp; \ddots  &amp; \vdots \\
+\rho^{n-1}\sigma_{1}\sigma_{n} &amp; \rho^{n-2}\sigma_{2}\sigma_{n} &amp; \rho^{n-3}\sigma_{3}\sigma_{n} &amp; ... &amp; \sigma_{n}^{2}\\
+\end{array}\right)
+\]</span></p>
+<p>and has <span class="math inline">\(n+1\)</span> parameters (<span class="math inline">\(n\)</span> variance parameters and 1 correlation parameter).</p>
+</section>
+<section id="exponential" class="slide level2 smaller">
+<h2>Exponential</h2>
+<p>When measurement occasions are <strong>not</strong> equally-spaced over time, autoregressive model can be <strong>generalized</strong> as follows.</p>
+<p>Let <span class="math inline">\(\left\{t_{i1},...,t_{in}\right\}\)</span> denote the observation times for the <span class="math inline">\(i\)</span>th individual and assume that the variance is constant across all measurement occasions (<span class="math inline">\(\sigma^{2}\)</span>), and <span class="math display">\[
+\small
+\text{Corr}(Y_{ij}, Y_{ik})=\rho^{|t_{ij} - t_{ik}|},
+\]</span> for <span class="math inline">\(\rho \ge 0\)</span>.</p>
+<ul>
+<li>Correlation between any pair of repeated measures decreases exponentially with the time separations between them</li>
+<li>Exponential covariance model is <strong>invariant</strong> under linear transformation of the time scale
+<ul>
+<li>If we replace time measured in “weeks” by time measured in “days”, the same form of the covariance matrix holds</li>
+</ul></li>
+</ul>
+</section>
+<section id="options-in-gls" class="slide level2 smaller">
+<h2>Options in <code>gls()</code></h2>
+<p>will give you a list of available types of correlation structures in the <code>nlme</code> package.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Structure</th>
+<th>R option</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unstructured</td>
+<td><code>corSymm(form = ~ t*|id)</code></td>
+</tr>
+<tr class="even">
+<td>Compound symmetry</td>
+<td><code>corCompSymm(form = ~ t*|id)</code></td>
+</tr>
+<tr class="odd">
+<td>Toeplitz</td>
+<td><code>corARMA(form = ~ t*|id, p=1, q=1)</code></td>
+</tr>
+<tr class="even">
+<td>AR1</td>
+<td><code>corAR1(form = ~ t*|id)</code></td>
+</tr>
+<tr class="odd">
+<td>Exponential</td>
+<td><code>corExp(form = ~ t|id)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Note: <code>t*</code> is the measurement occasion and <code>t</code> is the actual time unit.</p>
+</section>
+<section id="choice-among-covariance-pattern-models" class="slide level2 smaller">
+<h2>Choice among covariance pattern models</h2>
+<p>The choice among the covariance pattern models can be made by comparing the <strong>maximized likelihoods</strong>.</p>
+<h4 id="likelihood-ratio-test-lrt">Likelihood ratio test (LRT)</h4>
+<ul>
+<li>When any pair of models is <strong>nested</strong>, a LRT statistic from <strong>REML</strong> log-likelihoods can be constructed that compares the <em>full</em> and <em>reduced</em> models
+<ul>
+<li>For example: AR1 and compound symmetry are both nested within unstructured</li>
+<li>Another example: AR1 is nested within heterogeneous AR1</li>
+</ul></li>
+</ul>
+</section>
+<section id="choice-among-covariance-pattern-models-1" class="slide level2 smaller">
+<h2>Choice among covariance pattern models</h2>
+<h4 id="akaike-information-criterion-aic">Akaike information criterion (AIC)</h4>
+<ul>
+<li>Often we want to compare non-nested models for the covariance
+<ul>
+<li>For example: AR1 vs compound symmetry</li>
+</ul></li>
+<li>Select the model that <strong>minimizes</strong> <span class="math display">\[
+AIC = -2(\hat{l}-c),
+\]</span> where <span class="math inline">\(\hat{l}\)</span> is the maximized <strong>REML</strong> log-likelihood and <span class="math inline">\(c\)</span> is the number of covariance parameters (length of <span class="math inline">\(\theta \text{ for } \Sigma_{i}(\theta)\)</span>)</li>
+</ul>
+<h4 id="bayesian-information-criterion-bic">Bayesian information criterion (BIC)</h4>
+<ul>
+<li>Another criterion for <strong>non-nested</strong> models</li>
+<li>Select the model that <strong>minimizes</strong> <span class="math display">\[
+BIC = -2(\hat{l}-\text{log} \sqrt{N^{*}}c),
+\]</span> where <span class="math inline">\(N^{*} = N-p\)</span> is the number of <em>effective</em> subjects for <strong>REML</strong> log-likelihood</li>
 </ul>
 <div class="footer footer-default">
 
@@ -857,6 +1417,7 @@ Aya mitani
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
+'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -1155,9 +1716,10 @@ Aya mitani
         // clear code selection
         e.clearSelection();
       });
-      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      function tippyHover(el, contentFn) {
         const config = {
           allowHTML: true,
+          content: contentFn,
           maxWidth: 500,
           delay: 100,
           arrow: false,
@@ -1167,17 +1729,8 @@ Aya mitani
           interactive: true,
           interactiveBorder: 10,
           theme: 'light-border',
-          placement: 'bottom-start',
+          placement: 'bottom-start'
         };
-        if (contentFn) {
-          config.content = contentFn;
-        }
-        if (onTriggerFn) {
-          config.onTrigger = onTriggerFn;
-        }
-        if (onUntriggerFn) {
-          config.onUntrigger = onUntriggerFn;
-        }
           config['offset'] = [0,0];
           config['maxWidth'] = 700;
         window.tippy(el, config); 
