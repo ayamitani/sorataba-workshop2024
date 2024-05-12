@@ -405,7 +405,7 @@ Aya mitani
 <h2>Background and housekeeping</h2>
 <ul>
 <li>Most of workshop materials is from CHL5222 Analysis of Correlated Data taught by me for last four years</li>
-<li>Workshop materials are available from [https://github.com/ayamitani/sorataba-workshop2024]{https://github.com/ayamitani/sorataba-workshop2024}</li>
+<li>Workshop materials are available from <a href="https://github.com/ayamitani/sorataba-workshop2024">https://github.com/ayamitani/sorataba-workshop2024</a></li>
 <li>You can view the online slides or follow along with <code>.qmd</code> files</li>
 <li>If there are errors (mostly likely there will be!), I will update materials</li>
 </ul>
@@ -855,7 +855,7 @@ X_{in_{i}1} &amp; X_{in_{i}2} &amp; ... &amp; X_{in_{i}p}\\
 </section>
 <section id="covariance-and-correlation" class="slide level2 smaller">
 <h2>Covariance and correlation</h2>
-<div style="font-size: 75%;">
+<div style="font-size: 85%;">
 <p>Two aspects of longitudinal data complicate their statistical analysis:</p>
 <ol type="1">
 <li>repeated measurements on the same cluster (individual) are usually <strong>positively correlated</strong></li>
@@ -948,16 +948,16 @@ E(Y_{i}|X_{i}) = E({X}_{i}\beta + \epsilon_{i}) = E(X_{i}\beta) + E(\epsilon_{i}
 Y_{i}|X_{i} \sim MVN(X_{i}\beta, \Sigma_{i})
 \]</span></p>
 </section>
-<section id="model-mean-for-dental-study" class="slide level2 smaller">
-<h2>Model mean for dental study</h2>
+<section id="modelling-mean-for-dental-study" class="slide level2 smaller">
+<h2>Modelling mean for dental study</h2>
 
 <img data-src="index_files/figure-revealjs/unnamed-chunk-8-1.png" width="960" class="r-stretch"></section>
-<section id="model-mean-for-dental-study-1" class="slide level2 smaller">
-<h2>Model mean for dental study</h2>
+<section id="modelling-mean-for-dental-study-1" class="slide level2 smaller">
+<h2>Modelling mean for dental study</h2>
 <h4 id="a-linear-spline-model-with-a-knot-at-age-10-assuming-most-general-covariance-structure-for-now">A linear spline model with a knot at age 10 assuming most general covariance structure (for now)</h4>
 <p><span class="math display">\[
 \begin{aligned}
-E(\text{Distance}_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &amp;+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
+E(Y_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &amp;+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
 \end{aligned}
 \]</span> where <span class="math inline">\((x)_{+}\)</span> is the <em>truncated line function</em> defined as</p>
 <p><span class="math display">\[
@@ -983,52 +983,50 @@ x \quad \text{ if } x &gt; 0 \\
 <p>Expected mean response for females prior to and after age <span class="math inline">\(10\)</span>,</p>
 <p><span class="math display">\[
 \begin{aligned}
-E(\text{Distance}_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij}
+E(Y_{ij}) &amp;= \beta_{1} + \beta_{2}\text{age}_{ij}
 &amp; \text{age}_{ij} \le 10;\\\\
-E(\text{Distance}_{ij}) &amp;= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij}
+E(Y_{ij}) &amp;= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij}
 &amp; \text{age}_{ij} &gt; 10.
 \end{aligned}
 \]</span></p>
 <p>Expected mean response for males prior to and after age <span class="math inline">\(10\)</span>,</p>
 <p><span class="math display">\[
 \begin{aligned}
-E(\text{Distance}_{ij}) &amp;= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij}
+E(Y_{ij}) &amp;= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij}
 &amp; \text{age}_{ij} \le 10;\\\\
-E(\text{Distance}_{ij}) &amp;= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
+E(Y_{ij}) &amp;= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
 &amp; \text{age}_{ij} &gt; 10.
 \end{aligned}
 \]</span></p>
 </section>
-<section id="model-mean-for-dental-study-2" class="slide level2 smaller">
-<h2>Model mean for dental study</h2>
-<div class="cell columns column-output-location">
-<div class="column">
+<section id="modelling-mean-for-dental-study-2" class="slide level2 smaller">
+<h2>Modelling mean for dental study</h2>
+<div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>knot <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="co"># let t* = age 10</span></span>
 <span id="cb11-2"><a href="#cb11-2"></a></span>
 <span id="cb11-3"><a href="#cb11-3"></a>dentallong <span class="ot">&lt;-</span> dental <span class="sc">%&gt;%</span></span>
 <span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"distance"</span>),</span>
 <span id="cb11-5"><a href="#cb11-5"></a>               <span class="at">names_to =</span> <span class="st">"age"</span>,</span>
-<span id="cb11-6"><a href="#cb11-6"></a>               <span class="co"># this removes "distance_age" from the values</span></span>
-<span id="cb11-7"><a href="#cb11-7"></a>               <span class="at">names_prefix =</span> <span class="st">"distance_age"</span>, </span>
-<span id="cb11-8"><a href="#cb11-8"></a>               <span class="at">values_to =</span> <span class="st">"distance"</span>,</span>
-<span id="cb11-9"><a href="#cb11-9"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb11-10"><a href="#cb11-10"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
-<span id="cb11-11"><a href="#cb11-11"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">row_number</span>(),</span>
-<span id="cb11-12"><a href="#cb11-12"></a>         <span class="co"># for this model, we want age as continuous</span></span>
-<span id="cb11-13"><a href="#cb11-13"></a>         <span class="at">age =</span> <span class="fu">as.numeric</span>(age), </span>
-<span id="cb11-14"><a href="#cb11-14"></a>         <span class="co"># make a 1/0 binary variable group</span></span>
-<span id="cb11-15"><a href="#cb11-15"></a>         <span class="at">group =</span> <span class="fu">case_when</span>(     </span>
-<span id="cb11-16"><a href="#cb11-16"></a>           gender <span class="sc">==</span> <span class="st">"F"</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
-<span id="cb11-17"><a href="#cb11-17"></a>           gender <span class="sc">==</span> <span class="st">"M"</span> <span class="sc">~</span> <span class="dv">1</span></span>
-<span id="cb11-18"><a href="#cb11-18"></a>         ),</span>
-<span id="cb11-19"><a href="#cb11-19"></a>         <span class="co"># code to apply truncated linear function</span></span>
-<span id="cb11-20"><a href="#cb11-20"></a>         <span class="at">ageknot =</span> (age <span class="sc">-</span> knot) <span class="sc">*</span> <span class="fu">I</span>(age <span class="sc">&gt;=</span> knot)) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-21"><a href="#cb11-21"></a>  <span class="co"># same can be achieved by </span></span>
-<span id="cb11-22"><a href="#cb11-22"></a>  <span class="co"># ageknot = ifelse(age &gt;= knot, age - knot, 0)</span></span>
-<span id="cb11-23"><a href="#cb11-23"></a>  <span class="fu">ungroup</span>()</span>
-<span id="cb11-24"><a href="#cb11-24"></a></span>
-<span id="cb11-25"><a href="#cb11-25"></a>dentallong[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div><div class="column">
+<span id="cb11-6"><a href="#cb11-6"></a>               <span class="at">names_prefix =</span> <span class="st">"distance_age"</span>, <span class="co"># this removes "distance_age" from the values</span></span>
+<span id="cb11-7"><a href="#cb11-7"></a>               <span class="at">values_to =</span> <span class="st">"distance"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">row_number</span>(),</span>
+<span id="cb11-11"><a href="#cb11-11"></a>         <span class="at">age =</span> <span class="fu">as.numeric</span>(age), <span class="co"># for this model, we want age as continuous</span></span>
+<span id="cb11-12"><a href="#cb11-12"></a>         <span class="at">group =</span> <span class="fu">case_when</span>(     <span class="co"># make a 1/0 binary variable group</span></span>
+<span id="cb11-13"><a href="#cb11-13"></a>           gender <span class="sc">==</span> <span class="st">"F"</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb11-14"><a href="#cb11-14"></a>           gender <span class="sc">==</span> <span class="st">"M"</span> <span class="sc">~</span> <span class="dv">1</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a>         ),</span>
+<span id="cb11-16"><a href="#cb11-16"></a>         <span class="at">ageknot =</span> (age <span class="sc">-</span> knot) <span class="sc">*</span> <span class="fu">I</span>(age <span class="sc">&gt;=</span> knot)) <span class="sc">%&gt;%</span>  <span class="co"># code to apply truncated linear function</span></span>
+<span id="cb11-17"><a href="#cb11-17"></a>  <span class="co"># same can be achieved by </span></span>
+<span id="cb11-18"><a href="#cb11-18"></a>  <span class="co"># ageknot = ifelse(age &gt;= knot, age - knot, 0)</span></span>
+<span id="cb11-19"><a href="#cb11-19"></a>  <span class="fu">ungroup</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="modelling-mean-for-dental-study-3" class="slide level2 smaller">
+<h2>Modelling mean for dental study</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>dentallong[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 20 × 7
       id gender   age distance  time group  ageknot
@@ -1055,16 +1053,15 @@ E(\text{Distance}_{ij}) &amp;= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) 
 20     5 F         14     23.5     4     0        4</code></pre>
 </div>
 </div>
-</div>
 </section>
 <section id="use-gls-from-nlme-package" class="slide level2 smaller">
 <h2>Use <code>gls()</code> from <code>nlme</code> package</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>dentalpw <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">+</span> age <span class="sc">+</span> ageknot <span class="sc">+</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
-<span id="cb13-2"><a href="#cb13-2"></a>                <span class="co"># short hand form: distance ~ group * age + group * ageknot</span></span>
-<span id="cb13-3"><a href="#cb13-3"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), </span>
-<span id="cb13-4"><a href="#cb13-4"></a>                <span class="at">data =</span> dentallong)</span>
-<span id="cb13-5"><a href="#cb13-5"></a><span class="fu">summary</span>(dentalpw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>dentalpw <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">+</span> age <span class="sc">+</span> ageknot <span class="sc">+</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
+<span id="cb14-2"><a href="#cb14-2"></a>                <span class="co"># short hand form: distance ~ group * age + group * ageknot</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), </span>
+<span id="cb14-4"><a href="#cb14-4"></a>                <span class="at">data =</span> dentallong)</span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="fu">summary</span>(dentalpw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generalized least squares fit by REML
   Model: distance ~ group + age + ageknot + group * age + group * ageknot 
@@ -1117,23 +1114,25 @@ Degrees of freedom: 108 total; 102 residual</code></pre>
 <section id="compare-observed-and-expected-means" class="slide level2">
 <h2>Compare observed and expected means</h2>
 
-<img data-src="index_files/figure-revealjs/unnamed-chunk-11-1.png" width="960" class="r-stretch"></section>
+<img data-src="index_files/figure-revealjs/unnamed-chunk-12-1.png" width="960" class="r-stretch"></section>
 <section id="compare-different-mean-models" class="slide level2 smaller">
 <h2>Compare different mean models</h2>
 <p>A simpler model</p>
 <p><span class="math display">\[
 \begin{aligned}
-E(\text{Distance}_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i}
+E(Y_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i}
 \end{aligned}
 \]</span> When comparing different mean models with the same covariance, use ML estimation.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>dentpwML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
-<span id="cb15-2"><a href="#cb15-2"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
-<span id="cb15-3"><a href="#cb15-3"></a>                <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
-<span id="cb15-4"><a href="#cb15-4"></a>dentlinML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, </span>
-<span id="cb15-5"><a href="#cb15-5"></a>                 <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form =</span> <span class="sc">~</span> time <span class="sc">|</span> id), <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
-<span id="cb15-6"><a href="#cb15-6"></a>                 <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
-<span id="cb15-7"><a href="#cb15-7"></a><span class="fu">anova</span>(dentpwML, dentlinML)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>dentpwML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age <span class="sc">+</span> group <span class="sc">*</span> ageknot, </span>
+<span id="cb16-2"><a href="#cb16-2"></a>                <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb16-3"><a href="#cb16-3"></a>                <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
+<span id="cb16-4"><a href="#cb16-4"></a>                <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
+<span id="cb16-5"><a href="#cb16-5"></a>dentlinML <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, </span>
+<span id="cb16-6"><a href="#cb16-6"></a>                 <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form =</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb16-7"><a href="#cb16-7"></a>                 <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time),</span>
+<span id="cb16-8"><a href="#cb16-8"></a>                 <span class="at">method =</span> <span class="st">"ML"</span>, <span class="at">data =</span> dentallong)</span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="fu">anova</span>(dentpwML, dentlinML)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>          Model df      AIC      BIC    logLik   Test  L.Ratio p-value
 dentpwML      1 16 448.5572 491.4713 -208.2786                        
@@ -1205,7 +1204,7 @@ dentlinML     2 14 447.4770 485.0269 -209.7385 1 vs 2 2.919806  0.2323</code></p
 <li>The number of variance parameters grows rapidly with the number of measurement occasions</li>
 </ul>
 
-<img data-src="index_files/figure-revealjs/unnamed-chunk-13-1.png" width="960" class="r-stretch"><ul>
+<img data-src="index_files/figure-revealjs/unnamed-chunk-14-1.png" width="960" class="r-stretch"><ul>
 <li>When number of covariance parameters (length of <span class="math inline">\(\theta\)</span>) is large, relative to sample size (<span class="math inline">\(N\)</span>), estimation is likely to be <strong>very unstable</strong></li>
 <li>Problematic when there are <strong>mistimed</strong> measurements</li>
 </ul>
@@ -1387,6 +1386,153 @@ AIC = -2(\hat{l}-c),
 BIC = -2(\hat{l}-\text{log} \sqrt{N^{*}}c),
 \]</span> where <span class="math inline">\(N^{*} = N-p\)</span> is the number of <em>effective</em> subjects for <strong>REML</strong> log-likelihood</li>
 </ul>
+</section>
+<section id="back-to-dental-study-example" class="slide level2 smaller">
+<h2>Back to dental study example</h2>
+<p>Note:</p>
+<ul>
+<li>By default, <code>getVarCov()</code> will display the estimated variance-covariance matrix of the first person (id) in the data</li>
+<li>Therefore, the matrix is <span class="math inline">\(n_i \times n_i\)</span> where <span class="math inline">\(i=1\)</span></li>
+<li>If you want to display the variance-covariance with dimension equal to the maximum number of visits, then we need to find a person who has no missing visits</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co"># unstructured</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>unstr <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, </span>
+<span id="cb18-3"><a href="#cb18-3"></a>             <span class="at">corr=</span><span class="fu">corSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb18-4"><a href="#cb18-4"></a>             <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), <span class="at">data =</span> dentallong)</span>
+<span id="cb18-5"><a href="#cb18-5"></a><span class="fu">getVarCov</span>(unstr, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.4252 2.7092 3.8411 2.7152
+[2,] 2.7092 4.1906 2.9745 3.3137
+[3,] 3.8411 2.9745 6.2632 4.1333
+[4,] 2.7152 3.3137 4.1333 4.9862
+  Standard Deviations: 2.3292 2.0471 2.5026 2.233 </code></pre>
+</div>
+</div>
+</section>
+<section id="back-to-dental-study-example-1" class="slide level2 smaller">
+<h2>Back to dental study example</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># compound symmetry (heterogeneous)</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>compsym <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, <span class="at">corr=</span><span class="fu">corCompSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb20-3"><a href="#cb20-3"></a>               <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), <span class="at">data =</span> dentallong)</span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="fu">getVarCov</span>(compsym, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.6967 3.1209 3.7419 3.3309
+[2,] 3.1209 4.2365 3.2269 2.8724
+[3,] 3.7419 3.2269 6.0901 3.4440
+[4,] 3.3309 2.8724 3.4440 4.8256
+  Standard Deviations: 2.3868 2.0583 2.4678 2.1967 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># AR1 (heterogeneous)</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>ar1 <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, <span class="at">corr=</span><span class="fu">corAR1</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb22-3"><a href="#cb22-3"></a>           <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), <span class="at">data =</span> dentallong)</span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="fu">getVarCov</span>(ar1, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.8149 3.2683 2.3721 1.3044
+[2,] 3.2683 4.5807 3.3246 1.8281
+[3,] 2.3721 3.3246 6.0172 3.3087
+[4,] 1.3044 1.8281 3.3087 4.5369
+  Standard Deviations: 2.4114 2.1403 2.453 2.13 </code></pre>
+</div>
+</div>
+</section>
+<section id="back-to-dental-study-example-2" class="slide level2 smaller">
+<h2>Back to dental study example</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># Toeplitz (heterogeneous)</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>toep <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, </span>
+<span id="cb24-3"><a href="#cb24-3"></a>            <span class="at">corr=</span><span class="fu">corARMA</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id, <span class="at">p=</span><span class="dv">1</span>, <span class="at">q=</span><span class="dv">1</span>), </span>
+<span id="cb24-4"><a href="#cb24-4"></a>            <span class="at">weights =</span> <span class="fu">varIdent</span>(<span class="at">form =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> time), <span class="at">data =</span> dentallong)</span>
+<span id="cb24-5"><a href="#cb24-5"></a><span class="fu">getVarCov</span>(toep, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.6763 3.2354 3.6921 3.1185
+[2,] 3.2354 4.3350 3.3596 2.8377
+[3,] 3.6921 3.3596 6.1205 3.5109
+[4,] 3.1185 2.8377 3.5109 4.7341
+  Standard Deviations: 2.3825 2.0821 2.474 2.1758 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="co"># Exponential </span></span>
+<span id="cb26-2"><a href="#cb26-2"></a>expo <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, <span class="at">corr=</span><span class="fu">corExp</span>(<span class="at">form=</span> <span class="sc">~</span> age <span class="sc">|</span> id), </span>
+<span id="cb26-3"><a href="#cb26-3"></a>            <span class="at">data =</span> dentallong)</span>
+<span id="cb26-4"><a href="#cb26-4"></a><span class="fu">getVarCov</span>(expo, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.2144 3.2563 2.0335 1.2699
+[2,] 3.2563 5.2144 3.2563 2.0335
+[3,] 2.0335 3.2563 5.2144 3.2563
+[4,] 1.2699 2.0335 3.2563 5.2144
+  Standard Deviations: 2.2835 2.2835 2.2835 2.2835 </code></pre>
+</div>
+</div>
+</section>
+<section id="compare-models-using-aic-and-bic" class="slide level2 smaller">
+<h2>Compare models using AIC and BIC</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>           AIC      BIC
+Unstr 452.5468 489.5683
+CS    449.9724 473.7719
+AR1   460.7962 484.5957
+Toep  451.6066 478.0506
+Exp   456.5874 472.4538</code></pre>
+</div>
+</div>
+<p>Heterogeneous CS (Exchangeable) structure has the smallest AIC and second smallest BIC.</p>
+<p>What about heterogeneous CS vs.&nbsp;standard CS?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>compsym1 <span class="ot">&lt;-</span> <span class="fu">gls</span>(distance <span class="sc">~</span> group <span class="sc">*</span> age, <span class="at">corr=</span><span class="fu">corCompSymm</span>(<span class="at">form=</span> <span class="sc">~</span> time <span class="sc">|</span> id), </span>
+<span id="cb29-2"><a href="#cb29-2"></a>                <span class="at">data =</span> dentallong)</span>
+<span id="cb29-3"><a href="#cb29-3"></a><span class="fu">getVarCov</span>(compsym1, <span class="at">individual =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]
+[1,] 5.2207 3.2986 3.2986 3.2986
+[2,] 3.2986 5.2207 3.2986 3.2986
+[3,] 3.2986 3.2986 5.2207 3.2986
+[4,] 3.2986 3.2986 3.2986 5.2207
+  Standard Deviations: 2.2849 2.2849 2.2849 2.2849 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a><span class="fu">anova</span>(compsym, compsym1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Model df      AIC      BIC    logLik   Test  L.Ratio p-value
+compsym      1  9 449.9724 473.7719 -215.9862                        
+compsym1     2  6 445.7572 461.6236 -216.8786 1 vs 2 1.784873  0.6182</code></pre>
+</div>
+</div>
+<p>Looks like we can use the standard CS structure which yields a more parsimoneous model.</p>
+</section>
+<section id="strengths-and-weaknesses-of-covariance-pattern-models" class="slide level2 smaller">
+<h2>Strengths and weaknesses of covariance pattern models</h2>
+<h4 id="strengths">Strengths</h4>
+<ul>
+<li>Covariance pattern models characterize the covariance among longitudinal data with a <strong>relatively small number of parameters</strong></li>
+<li>Can handle <strong>missing data</strong> at any of the <strong>fixed occasions</strong></li>
+</ul>
+<h4 id="weeknesses">Weeknesses</h4>
+<ul>
+<li>Many models (AR1, Toeplitz) are appropriate only when repeated measurements are obtained at <strong>equal intervals</strong> and cannot handle <strong>irregularly timed measurements</strong></li>
+<li>While there is a large selection of models for <strong>correlations</strong>, choice of models for <strong>variances</strong> is limited</li>
+<li>Not well-suited for modeling data from inherently unbalanced longitudinal designs</li>
+</ul>
+</section>
+<section id="conclusion" class="slide level2 smaller">
+<h2>Conclusion</h2>
+<p>Many authors recommend that covariance pattern models with <strong>heterogeneous variances</strong>, allowing the variances to depend arbitrarily on time, should generally be adopted.</p>
+<p><strong>Model selection</strong> for both the mean response and covariance should be conducted as follows:</p>
+<ol type="1">
+<li>Include all covariates of potential interest, select an appropriate covariance structure (<strong>REML</strong>)</li>
+<li>Once a covariance structure is selected, use appropriate methods to select the mean response model (<strong>ML</strong>)</li>
+</ol>
 <div class="footer footer-default">
 
 </div>
@@ -1570,7 +1716,7 @@ BIC = -2(\hat{l}-\text{log} \sqrt{N^{*}}c),
         // specified using percentage units.
         width: 1050,
 
-        height: 700,
+        height: 800,
 
         // Factor of the display size that should remain empty around the content
         margin: 0.1,

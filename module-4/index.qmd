@@ -8,6 +8,8 @@ format:
     background-transition: fade
     highlight-style: ayu-mirage
     embed-resources: true
+    height: 800
+    code-copy: true
 ---
 
 ```{r}
@@ -284,10 +286,15 @@ $$
 * The predictors include fully observed covariates and previously observed responses
 
 $$
-\text{logit}(\pi_{ij})=\theta_{1}+\theta_{2}I(t=2)+\theta_{3}I(t=3)+\theta_{4}\text{Dose}_{i}+\theta_{5}Y_{i,j-1}+\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}), \quad j = 1,2,3
+\begin{align}
+\text{logit}(\pi_{ij})=\theta_{1}+\theta_{2}I(t=2)+\theta_{3}I(t=3)+\theta_{4}\text{Dose}_{i}+\theta_{5}Y_{i,j-1}&+\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}), \\ j &= 1,2,3
+\end{align}
 $$
 where $\pi_{ij}=\Pr(R_{ij}=1|R_{i1}= \cdots = R_{i,j-1}=1, Y_{i,j-1}, \text{Dose}_{i})$.
+
+## Model for dropout process {.smaller}
 ```{r}
+#| echo: TRUE
 # ipw
 ipwdat <- amen %>%
   group_by(id) %>%
@@ -298,18 +305,27 @@ ipwdat <- amen %>%
          t3 = ifelse(time == 3, 1, 0),
          trt.prevy = trt * prevy) %>%
   filter(!is.na(y)|!is.na(prevy))  
-ipwdat
+tail(ipwdat, 10)
+```
+
+## Model for dropout process {.smaller}
+```{r}
+#| echo: TRUE
 
 # fit drop-out model
 r <- ipwdat$r
 xmat <- as.matrix(
-  cbind(rep(1, length(r)), ipwdat[,c("t2", "t3", "trt", "prevy", "trt.prevy")])
+  cbind(rep(1, length(r)), 
+        ipwdat[,c("t2", "t3", "trt", "prevy", "trt.prevy")])
   )
 rmod <- glm(r ~ xmat, family = binomial("logit"))
-summary(rmod)$coef
-dropcoef <- summary(rmod)$coef[,1]
 ```
 
+## Model for dropout process {.smaller}
+```{r}
+#| echo: TRUE
+summary(rmod)$coef; dropcoef <- summary(rmod)$coef[,1]
+```
 
 
 * For individuals in the **low** dose group, the conditional odds of **dropout** is approximately 60% higher if they experienced amenorrhea at the previous occasion
@@ -326,20 +342,28 @@ dropcoef <- summary(rmod)$coef[,1]
 
 First, compute the predicted $\text{logit}(\hat\pi_{ij})$ from the dropout model.
 $$
-\text{logit}(\hat\pi_{ij})=\hat\theta_{1}+\hat\theta_{2}I(t=2)+\hat\theta_{3}I(t=3)+\hat\theta_{4}\text{Dose}_{i}+\hat\theta_{5}Y_{i,j-1}+\hat\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}) 
-=Z_{ij}^{T}\hat\theta
+\begin{align}
+\text{logit}(\hat\pi_{ij})&=\hat\theta_{1}+\hat\theta_{2}I(t=2)+\hat\theta_{3}I(t=3)+\hat\theta_{4}\text{Dose}_{i}+\hat\theta_{5}Y_{i,j-1}+\hat\theta_{6}(\text{Dose}_{i}\times Y_{i,j-1}) \\
+&=Z_{ij}^{T}\hat\theta
+\end{align}
 $$
+
 ```{r}
+#| echo: TRUE
 ipwdat <- ipwdat %>%
   mutate(logitp = as.numeric(xmat %*% dropcoef))
 ```
+
+## Compute IPW {.smaller}
 
 Then, compute the predicted $\hat\pi_{ij}$.
 
 $$
 \hat\pi_{ij} = \frac{\text{exp}(Z_{ij}^{T}\hat\theta)}{1+\text{exp}(Z_{ij}^{T}\hat\theta)}
 $$
+
 ```{r}
+#| echo: TRUE
 ipwdat <- ipwdat %>%
   mutate(logitp = as.numeric(xmat %*% dropcoef),
          phat = ifelse(time == 0, 1, exp(logitp) / (1 + exp(logitp))))
@@ -350,8 +374,12 @@ Finally, compute the visit-specific IPW as
 $$
 \hat w_{ij} = (\hat\pi_{i1} \times \hat\pi_{i2} \times \cdots \hat\pi_{ij})^{-1}.
 $$
+
+## Compute IPW {.smaller}
+
 Because the first response was fully observed, with $R_{ij}=1$ for all individuals, $\hat\pi_{i1} = 1$ by definition.
 ```{r}
+#| echo: TRUE
 ipwdat <- ipwdat %>%
   mutate(logitp = as.numeric(xmat %*% dropcoef),
          phat = ifelse(time == 0, 1, exp(logitp) / (1 + exp(logitp)))) %>%
@@ -359,7 +387,11 @@ ipwdat <- ipwdat %>%
   mutate(cumprob = cumprod(phat),
          ipw = 1/cumprob) %>%
   ungroup() 
+```
 
+## Compute IPW {.smaller}
+```{r}
+#| echo: TRUE
 ipwdat %>%
   filter(id %in% c(100, 200, 400, 1000)) %>%
   dplyr::select(id, trt, time, y, prevy, r, logitp, phat, cumprob, ipw) %>%
@@ -397,8 +429,7 @@ $$
 
 * Use `wights=` option in `geeglm`
 * To ensure that the weights are appropriately incorporated, we need to make the **"working independence"** assumption for the within-subject association among the responses
-* Because a "working independence" assumption is made, standard errors are based on the **sandwich variance** estimator
-  + Default for `geeglm`
+* Because a "working independence" assumption is made, standard errors are based on the **sandwich variance** estimator (default for `geeglm`)
 
 ```{r}
 # ipw-gee
@@ -408,7 +439,6 @@ ipwgee <- geeglm(y ~ trt + time + time2 + trt.time + trt.time2,
                  corstr = "independence",
                  weights = ipw,
                  data = ipwdat)
-summary(ipwgee)
 ```
 
 ## Comparison {.smaller}
@@ -631,6 +661,7 @@ where
 
 + There are two types of AIDS data set in the `JM` package
 ```{r}
+#| echo: TRUE
 library(JM)
 data(aids)
 data(aids.id)
@@ -644,9 +675,11 @@ data(aids.id)
   - Used to fit the **survival submodel**
   
 ```{r}
+#| echo: TRUE
 head(aids.id, 20)
 ```
 
+## Survival probability {.smaller}
 
 ```{r}
 aids.km <- survfit(Surv(Time, death) ~ drug, data = aids.id)
@@ -663,6 +696,8 @@ ggsurvplot(
 )
 ```
 
+## Data structure {.smaller}
+
 + `aids`
   - A data frame with 1405 observations and 12 variables
   - Multiple observation for each patient
@@ -671,11 +706,12 @@ ggsurvplot(
   
 
 ```{r}
+#| echo: TRUE
 head(aids, 20)
 ```
 
 
-
+## Data structure {.smaller}
 
 
 ```{r}
@@ -702,7 +738,10 @@ h_{i}(t) &= h_{0}(t)\exp \{\gamma \text{ddI}_i +   \alpha m_{i}(t)\}
 $$
 
 
+## Joint model with `JM` package {.smaller}
+
 ```{r}
+#| echo: TRUE
 #-------------------------------------
 # joint model with JM package
 #-------------------------------------
@@ -717,11 +756,16 @@ jmcox <- coxph(Surv(Time, death) ~ drug, x = TRUE,
                data = aids.id)
 
 # finally, fit joint model with piecewise baseline hazard (other options are available)
-# jmaids <- jointModel(jmlong, jmcox, timeVar = "obstime",
-#                      method = "piecewise-PH-aGH")
-# summary(jmaids)
+jmaids <- jointModel(jmlong, jmcox, timeVar = "obstime",
+                     method = "piecewise-PH-aGH")
 ```
 
+## Joint model with `JM` package {.smaller}
+```{r}
+#| echo: TRUE
+
+summary(jmaids)
+```
 
 
 
@@ -743,11 +787,14 @@ $$
 does not take into account the **potential** MNAR missing data mechanism due to death.
 
 ```{r}
+#| echo: TRUE
 lmmmod <- lme(CD4 ~ obstime + obstime:drug,
               random = ~ obstime | patient,
               data = aids)
-summary(lmmmod)
 ```
+
+
+## Comparison to standard LMM {.smaller}
 
 
 Parameter estimates for **CD4 cell count**
@@ -774,7 +821,7 @@ Expected values of **CD4 cell count**
 
 
 
-## Conclusion {.smaller}
+## Conclusion on JM {.smaller}
  
 The bivariate Joint Model for a Longitudinal Outcome and a Terminal Time-to-Event Outcome is useful to
 
@@ -783,7 +830,7 @@ The bivariate Joint Model for a Longitudinal Outcome and a Terminal Time-to-Even
 + Account for **informative dropout** from longitudinal process
 + Get better estimation
 
-# Conclusion 
+## Conclusion on missing data  {.smaller}
 
 * The literature on dealing with dropouts in longitudinal studies, and missing data in correlated data, is fast-growing
   + Keep up with the literature!

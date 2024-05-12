@@ -8,6 +8,8 @@ format:
     background-transition: fade
     highlight-style: ayu-mirage
     embed-resources: true
+    height: 800
+    code-copy: true
 ---
 
 ```{r}
@@ -56,7 +58,7 @@ Y_{i} = X_{i}\beta + Z_{i}b_{i} + \epsilon_{i}
 $$
 The three components of the mixed effects models are:
 
-::: {style="font-size: 75%;"}
+::: {style="font-size: 85%;"}
 
 <a> **Fixed effects** </a> 
 
@@ -186,7 +188,7 @@ Y_{ij} = \beta_{0} + \beta_{1}\text{Age}^{*}_{ij} + \beta_{2}\text{Gender}_{i} +
 $$
 where $\text{Age}^{*} = \text{Age} - 8 \in (0,2,4,6)$.
 
-## Example: LMM in R
+## Example: LMM in R{.smaller}
 
 There are two popular packages in R to fit LMM: 
 
@@ -233,7 +235,7 @@ summary(fit1)
 * Note that 
   + $\hat{\sigma}_b = 1.82$ and $\hat{\sigma}_{\epsilon} = 1.39$
   
-::: {style="font-size: 85%;"}
+::: {style="font-size: 90%;"}
 * The marginal variance of each response is given by
 $$
 \begin{align}
@@ -524,15 +526,13 @@ where
 * $\epsilon^{*}_{ij}$ captures the variation in error terms beyond that is explained by $U_{i}(t_{ij})$
 
 
-## Example: random intercepts + auto-regressive errors {.smaller}
+## Example: random intercepts + AR1 errors {.smaller}
 
 ```{r}
 #| echo: TRUE
 
 fit3 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
-            corr = corCAR1(form = ~ agestar | id),
-            data = dentallong)
-getVarCov(fit3)
+            corr = corCAR1(form = ~ agestar | id), data = dentallong)
 getVarCov(fit3, type = "conditional", individual = 1)
 getVarCov(fit3, type = "marginal", individual = 1)
 ```
@@ -546,9 +546,7 @@ getVarCov(fit3, type = "marginal", individual = 1)
 #| echo: TRUE
 
 fit4 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
-            corr = corExp(form = ~ agestar | id),
-            data = dentallong)
-getVarCov(fit4)
+            corr = corExp(form = ~ agestar | id), data = dentallong)
 getVarCov(fit4, type = "conditional", individual = 1)
 getVarCov(fit4, type = "marginal", individual = 1)
 ```
@@ -560,9 +558,7 @@ getVarCov(fit4, type = "marginal", individual = 1)
 #| echo: TRUE
 
 fit5 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
-            weights = varIdent(form = ~ 1 | agestar),
-            data = dentallong)
-getVarCov(fit5)
+            weights = varIdent(form = ~ 1 | agestar), data = dentallong)
 getVarCov(fit5, type = "conditional", individual = 1)
 getVarCov(fit5, type = "marginal", individual = 1)
 ```
@@ -575,9 +571,7 @@ getVarCov(fit5, type = "marginal", individual = 1)
 #| echo: TRUE
 
 fit6 <- lme(distance ~ agestar * gender, random = ~ 1 | id, 
-            weights = varIdent(form = ~ 1 | gender),
-            data = dentallong, method = "ML")
-getVarCov(fit6)
+            weights = varIdent(form = ~ 1 | gender), data = dentallong)
 getVarCov(fit6, type = "conditional", individual = 1) # female
 getVarCov(fit6, type = "conditional", individual = 27) # male
 ```
@@ -677,6 +671,8 @@ GLMM formulation
 $$
 g\left\{E(Y_{ij}|b_{i})\right\} = X_{ij}^{T}\beta + Z_{ij}^{T}b_{i}
 $$
+
+for some **known** link function $g(\cdot)$.
 
 
 ## Interpretation of regression parameters{.smaller}
@@ -845,7 +841,7 @@ Y_{ij}=
 $$
 * We can then quantify the relative magnitudes of the between-cluster and within-cluster sources of variability using the intra-cluster correlation
 $$
-\rho = \text{Corr}(L_{ij}, L_{i'j}) = \frac{\sigma^{2}_{b}}{\sigma^{b}_{2}+\pi^{2}/3}  = \frac{5.039}{5.039+\pi^{2}/3} = 0.605
+\rho = \text{Corr}(L_{ij}, L_{i'j}) = \frac{\sigma^{2}_{b}}{\sigma^{2}_{b}+\pi^{2}/3}  = \frac{5.039}{5.039+\pi^{2}/3} = 0.605
 $$
 * Note that $\rho$ is the marginal correlation among the latent variables $L_{ij}$ and $L_{i'j}$ and **not** the marginal correlation among the observed variables $Y_{ij}$ and $Y_{i'j}$ 
 
@@ -946,6 +942,7 @@ $$
 $$
 Therefore,
 ```{r}
+#| echo: TRUE
 sum.glmm3 <- summary(glmm3)
 sum.glmm3$varcor
 var2 <- as.numeric(sum.glmm3$varcor$id)
@@ -953,5 +950,20 @@ var3 <- as.numeric(sum.glmm3$varcor$clinic2)
 intracl <- (var2 + var3) / (var2 + var3 + pi^2/3)
 intracl
 ```
+## Conclusion {.smaller}
 
+* GLMMs, fit via ML, and marginal models for dependent data, fit via GEE, represent the two main regression frameworks for cluster-correlated or longitudinal data
+
+<a> **Mixed effects models** </a> 
+
+* are more useful when the main scientific objective is to make inference about **individuals**
+* addresses scientific questions that are concerned with changes in the (transformed) mean response over time for any individual
+* estimation is based on maximum likelihood
+
+
+<a> **Marginal models** </a> 
+
+* are more useful for **population averages**
+* addresses scientific questions that are concerned with changes in the (transformed) mean response over time in the study population
+* estimation via GEE (semi-parametric)
 

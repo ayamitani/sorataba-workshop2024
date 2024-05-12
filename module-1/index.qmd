@@ -7,6 +7,9 @@ format:
     transition: fade
     background-transition: fade
     highlight-style: ayu-mirage
+    embed-resources: true
+    height: 800
+    code-copy: true
 ---
 
 ```{r}
@@ -29,7 +32,7 @@ theme_set(theme_bw(base_size = 20)) # Use black/white theme and increase font si
 ## Background and housekeeping
 
 + Most of workshop materials is from CHL5222 Analysis of Correlated Data taught by me for last four years
-+ Workshop materials are available from [https://github.com/ayamitani/sorataba-workshop2024]{https://github.com/ayamitani/sorataba-workshop2024}
++ Workshop materials are available from [https://github.com/ayamitani/sorataba-workshop2024](https://github.com/ayamitani/sorataba-workshop2024)
 + You can view the online slides or follow along with `.qmd` files
 + If there are errors (mostly likely there will be!), I will update materials
 
@@ -325,7 +328,7 @@ $X_{i}$ is simply an ordered collection of the values of the $p$ covariates for 
 
 ## Covariance and correlation{.smaller}
 
-::: {style="font-size: 75%;"}
+::: {style="font-size: 85%;"}
 
 Two aspects of longitudinal data complicate their statistical analysis:
 
@@ -439,7 +442,7 @@ Y_{i}|X_{i} \sim MVN(X_{i}\beta, \Sigma_{i})
 $$
 
 
-## Model mean for dental study{.smaller}
+## Modelling mean for dental study{.smaller}
 
 ```{r}
 dental <- read.table(here("datasets", "dentalstudy.txt"), header = TRUE)
@@ -466,13 +469,13 @@ dental %>%
   scale_color_brewer(palette = "Dark2")  
 ```
 
-## Model mean for dental study{.smaller}
+## Modelling mean for dental study{.smaller}
 
 #### A linear spline model with a knot at age 10 assuming most general covariance structure (for now)
 
 $$
 \begin{aligned}
-E(\text{Distance}_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
+E(Y_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}(\text{age}_{ij}-10)_{+} + \beta_{4}\text{male}_{i} \\ &+ \beta_{5}\text{age}_{ij}\times\text{male}_{i} + \beta_{6}(\text{age}_{ij}-10)_{+}\times \text{male}_{i}
 \end{aligned}
 $$
 where $(x)_{+}$ is the *truncated line function* defined as
@@ -503,9 +506,9 @@ Expected mean response for females prior to and after age $10$,
 
 $$
 \begin{aligned}
-E(\text{Distance}_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} 
+E(Y_{ij}) &= \beta_{1} + \beta_{2}\text{age}_{ij} 
 & \text{age}_{ij} \le 10;\\\\
-E(\text{Distance}_{ij}) &= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij} 
+E(Y_{ij}) &= (\beta_{1}-10\beta_{3}) + (\beta_{2}+\beta_{3})\text{age}_{ij} 
 & \text{age}_{ij} > 10.
 \end{aligned}
 $$
@@ -514,43 +517,43 @@ Expected mean response for males prior to and after age $10$,
 
 $$
 \begin{aligned}
-E(\text{Distance}_{ij}) &= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij} 
+E(Y_{ij}) &= (\beta_{1}+ \beta_{4}) + (\beta_{2} + \beta_{5})\text{age}_{ij} 
 & \text{age}_{ij} \le 10;\\\\
-E(\text{Distance}_{ij}) &= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
+E(Y_{ij}) &= (\beta_{1}+ \beta_{4}) - 10(\beta_{3}+\beta_{6}) + (\beta_{2} + \beta_{3} + \beta_{5} + \beta_{6})\text{age}_{ij}  
 & \text{age}_{ij} > 10.
 \end{aligned}
 $$
 
-## Model mean for dental study {.smaller}
+## Modelling mean for dental study {.smaller}
 
 ```{r}
 #| echo: TRUE
-#| output-location: column
 
 knot <- 10 # let t* = age 10
 
 dentallong <- dental %>%
   pivot_longer(cols = starts_with("distance"),
                names_to = "age",
-               # this removes "distance_age" from the values
-               names_prefix = "distance_age", 
+               names_prefix = "distance_age", # this removes "distance_age" from the values
                values_to = "distance",
   ) %>%
   group_by(id) %>%
   mutate(time = row_number(),
-         # for this model, we want age as continuous
-         age = as.numeric(age), 
-         # make a 1/0 binary variable group
-         group = case_when(     
+         age = as.numeric(age), # for this model, we want age as continuous
+         group = case_when(     # make a 1/0 binary variable group
            gender == "F" ~ 0,
            gender == "M" ~ 1
          ),
-         # code to apply truncated linear function
-         ageknot = (age - knot) * I(age >= knot)) %>% 
+         ageknot = (age - knot) * I(age >= knot)) %>%  # code to apply truncated linear function
   # same can be achieved by 
   # ageknot = ifelse(age >= knot, age - knot, 0)
   ungroup()
+```
 
+
+## Modelling mean for dental study {.smaller}
+```{r}
+#| echo: TRUE
 dentallong[1:20,]
 ```
 
@@ -619,7 +622,7 @@ A simpler model
 
 $$
 \begin{aligned}
-E(\text{Distance}_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i} 
+E(Y_{ij}) = \beta_{1} + \beta_{2}\text{age}_{ij} + \beta_{3}\text{male}_{i} + \beta_{4}\text{age}_{ij}\times\text{male}_{i} 
 \end{aligned}
 $$
 When comparing different mean models with the same covariance, use ML estimation.
@@ -627,10 +630,12 @@ When comparing different mean models with the same covariance, use ML estimation
 ```{r}
 #| echo: TRUE
 dentpwML <- gls(distance ~ group * age + group * ageknot, 
-                corr=corSymm(form= ~ time | id), weights = varIdent(form = ~ 1 | time),
+                corr=corSymm(form= ~ time | id), 
+                weights = varIdent(form = ~ 1 | time),
                 method = "ML", data = dentallong)
 dentlinML <- gls(distance ~ group * age, 
-                 corr=corSymm(form = ~ time | id), weights = varIdent(form = ~ 1 | time),
+                 corr=corSymm(form = ~ time | id), 
+                 weights = varIdent(form = ~ 1 | time),
                  method = "ML", data = dentallong)
 anova(dentpwML, dentlinML)
 ```
@@ -858,6 +863,111 @@ $$
 BIC = -2(\hat{l}-\text{log} \sqrt{N^{*}}c),
 $$
 where $N^{*} = N-p$ is the number of *effective* subjects for **REML** log-likelihood
+
+
+
+## Back to dental study example {.smaller}
+
+Note:
+
++ By default, `getVarCov()` will display the estimated variance-covariance matrix of the first person (id) in the data
++ Therefore, the matrix is $n_i \times n_i$ where $i=1$
++ If you want to display the variance-covariance with dimension equal to the maximum number of visits, then we need to find a person who has no missing visits
+
+```{r}
+#| echo: TRUE
+# unstructured
+unstr <- gls(distance ~ group * age, 
+             corr=corSymm(form= ~ time | id), 
+             weights = varIdent(form = ~ 1 | time), data = dentallong)
+getVarCov(unstr, individual = 1)
+```
+
+## Back to dental study example {.smaller}
+
+```{r}
+#| echo: TRUE
+# compound symmetry (heterogeneous)
+compsym <- gls(distance ~ group * age, corr=corCompSymm(form= ~ time | id), 
+               weights = varIdent(form = ~ 1 | time), data = dentallong)
+getVarCov(compsym, individual = 1)
+# AR1 (heterogeneous)
+ar1 <- gls(distance ~ group * age, corr=corAR1(form= ~ time | id), 
+           weights = varIdent(form = ~ 1 | time), data = dentallong)
+getVarCov(ar1, individual = 1)
+```
+
+## Back to dental study example {.smaller}
+
+```{r}
+#| echo: TRUE
+# Toeplitz (heterogeneous)
+toep <- gls(distance ~ group * age, 
+            corr=corARMA(form= ~ time | id, p=1, q=1), 
+            weights = varIdent(form = ~ 1 | time), data = dentallong)
+getVarCov(toep, individual = 1)
+# Exponential 
+expo <- gls(distance ~ group * age, corr=corExp(form= ~ age | id), 
+            data = dentallong)
+getVarCov(expo, individual = 1)
+```
+
+
+## Compare models using AIC and BIC {.smaller}
+```{r}
+outAIC <- function(x){
+  sumx <- summary(x)
+  out <- c(sumx$AIC, sumx$BIC)
+  names(out) <- c("AIC", "BIC")
+  out
+}
+allaic <- rbind(
+  outAIC(unstr),
+  outAIC(compsym),
+  outAIC(ar1),
+  outAIC(toep),
+  outAIC(expo)
+)
+rownames(allaic) <- c("Unstr", "CS", "AR1", "Toep", "Exp")
+allaic
+```
+Heterogeneous CS (Exchangeable) structure has the smallest AIC and second smallest BIC.
+
+What about heterogeneous CS vs. standard CS?
+
+```{r}
+#| echo: TRUE
+compsym1 <- gls(distance ~ group * age, corr=corCompSymm(form= ~ time | id), 
+                data = dentallong)
+getVarCov(compsym1, individual = 1)
+anova(compsym, compsym1)
+```
+Looks like we can use the standard CS structure which yields a more parsimoneous model.
+
+
+
+## Strengths and weaknesses of covariance pattern models{.smaller}
+
+#### Strengths
+
+* Covariance pattern models characterize the covariance among longitudinal data with a **relatively small number of parameters**
+* Can handle **missing data** at any of the **fixed occasions**
+
+#### Weeknesses
+
+* Many models (AR1, Toeplitz) are appropriate only when repeated measurements are obtained at **equal intervals** and cannot handle **irregularly timed measurements**
+* While there is a large selection of models for **correlations**, choice of models for **variances** is limited
+* Not well-suited for modeling data from inherently unbalanced longitudinal designs
+
+
+## Conclusion{.smaller}
+
+Many authors recommend that covariance pattern models with **heterogeneous variances**, allowing the variances to depend arbitrarily on time, should generally be adopted.
+
+**Model selection** for both the mean response and covariance should be conducted as follows:
+
+1) Include all covariates of potential interest, select an appropriate covariance structure (**REML**)
+2) Once a covariance structure is selected, use appropriate methods to select the mean response model (**ML**)
 
 
 

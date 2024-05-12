@@ -8,6 +8,8 @@ format:
     background-transition: fade
     highlight-style: ayu-mirage
     embed-resources: true
+    height: 800
+    code-copy: true
 ---
 
 ```{r}
