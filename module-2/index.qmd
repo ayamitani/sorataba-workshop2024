@@ -676,4 +676,133 @@ summary(modfit2)
 
 ## Marginal models for clustered data {.smaller}
 
-Clustered data 
+* In some situations, responses may be correlated between units within the same cluster
+* Examples are:
+  + Members in the same family
+  + Patients who seek care from the same doctor
+  + Students in the same school
+  + Teeth in patients
+* Working correlation structures that make sense for these situations are the independent and exchangeable
+* However, an often neglected assumption of GEE is that the size of the cluster needs to be independent of the outcomes
+  + When this assumption is violated, results can be biased
+  
+## Example: Clinical attachment loss {.smaller}
+
+* Clinical attachment loss (CAL) is a dental marker that measures the periodontal health of a tooth
+* Higher CAL measurement indicates worse progress of periodontal disease
+* Research question: Is metabolic syndrome (MetS) related to periodontitis (measured by CAL)?
+
+```{r}
+#| echo: FALSE
+
+dd <- data.frame(
+  Variable = c("subject", "tooth", "cal5", "age", "college", "smoking", "mets", "numteeth"),
+  Type = rep("numeric", 8),
+  Description = c("Unique subject identifier",
+                  "Tooth identifier excluding third molars (wisdom teeth), 2-15, 18-31",
+                  "Clinical attachment loss (CAL) on each tooth if > 5 milimeters",
+                  "Age at time of exam",
+                  "Indicator of college education",
+                  "History of smoking, 1 = current or former smoker, 0 = never-smoker",
+                  "Presence or absence of metabolic syndrome",
+                  "Number of teeth at baseline")
+)
+kable(dd) %>%
+  kable_minimal()
+```
+## Example: Clinical attachment loss {.smaller}
+
+```{r}
+#| echo: TRUE
+
+cal <- read.csv(here("datasets", "cal.csv"))
+head(cal)
+length(unique(cal$subject))
+
+ggplot(cal, aes(x = numteeth)) + 
+  geom_bar() + 
+  labs(y = "Count", x = "Number of teeth",
+       main = "Distribution of number of teeth per patient")
+```
+## Informative cluster size (ICS)
+
+* ICS occurs when cluster size (number of teeth) varies and is related to the outcome (CAL)
+
+```{r}
+cal %>%
+  group_by(subject) %>%
+  mutate(meanCAL = mean(cal5)) %>%
+  ungroup() %>%
+  group_by(numteeth, meanCAL) %>%
+  tally(name = "frq") %>%
+  ggplot(aes(x = numteeth, y = meanCAL, size = frq)) + 
+  geom_point(alpha = 0.5, color="cornflowerblue") +
+  scale_size(breaks = c(5, 10, 20, 30), range = c(1, 15), name="Frequency of patients") + 
+  scale_x_continuous(breaks=c(0,5,10,15,20,25)) +
+  theme_bw() + 
+  theme(legend.position="bottom") + 
+  labs(y="Proportion of CAL>5mm per patient", 
+       x="Number of teeth") 
+```
+
+## Cluster weighted GEE{.smaller}
+
+* To remove bias due to ICS, we estimate the parameters using a weighted estimating equations where the weights are inverse of cluster size, $1/n_i$
+
+$$
+\sum_{i=1}^{N}\frac{1}{n_i}\sum_{j=1}^{n_i}D^{T}_{ij}V_{ij}^{-1}(y_{ij}-\mu_{ij})=0.
+$$
+* $V_{ij}$ is assumed to be independent
+
+```{r}
+#| echo: TRUE
+cwgee <- geeglm(cal5 ~ mets + college + age + smoking,
+                id = subject,
+                weight = 1/numteeth,
+                family = binomial(link = "logit"),
+                corstr = "ind",
+                scale.fix = TRUE,
+                data = cal)
+```
+
+## CWGEE vs GEE results
+```{r}
+geeex <- geeglm(cal5 ~ mets + college + age + smoking,
+                id = subject,
+                family = binomial(link = "logit"),
+                corstr = "exchangeable",
+                scale.fix = TRUE,
+                data = cal)
+geeind <- geeglm(cal5 ~ mets + college + age + smoking,
+                id = subject,
+                family = binomial(link = "logit"),
+                corstr = "ind",
+                scale.fix = TRUE,
+                data = cal)
+
+tblunwex <- geeex %>%
+  tbl_regression(exponentiate = TRUE)
+tblunwind <- geeind %>%
+  tbl_regression(exponentiate = TRUE)
+tblcw <- cwgee %>%
+  tbl_regression(exponentiate = TRUE)
+
+
+# merge tables
+tbl_merge_ex2 <-
+  tbl_merge(
+    tbls = list(tblunwex, tblunwind, tblcw),
+    tab_spanner = c("**GEE (Exch)**", "**GEE (Ind)**", "**CWGEE**")
+  ) %>%
+  modify_header(label = "**Variable**")
+tbl_merge_ex2
+```
+## Conclusion on marginal models 
+
+* More useful for **population averages**
+* Addresses scientific questions that are concerned with changes in the (transformed) mean response over time in the study population
+* Estimation via GEE (semi-parametric)
+* Care with often overlooked assumptions
+  + Informative cluster size
+  + Informative visit times
+
