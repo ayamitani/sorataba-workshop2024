@@ -739,23 +739,24 @@ $$
 
 
 ## Joint model with `JM` package {.smaller}
+* First, fit longitudinal submodel
 
 ```{r}
 #| echo: TRUE
-#-------------------------------------
-# joint model with JM package
-#-------------------------------------
 
-# first, fit longitudinal submodel
 jmlong <- lme(CD4 ~ obstime + obstime:drug,
               random = ~ obstime | patient,
               data = aids)
-
-# next, fit survival submodel
+```
+* Next, fit survival submodel
+```{r}
+#| echo: TRUE
 jmcox <- coxph(Surv(Time, death) ~ drug, x = TRUE,
                data = aids.id)
-
-# finally, fit joint model with piecewise baseline hazard (other options are available)
+```
+* Finally, fit joint model with piecewise baseline hazard (other options are available)
+```{r}
+#| echo: TRUE
 jmaids <- jointModel(jmlong, jmcox, timeVar = "obstime",
                      method = "piecewise-PH-aGH")
 ```

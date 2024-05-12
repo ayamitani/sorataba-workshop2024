@@ -2268,29 +2268,33 @@ h_{i}(t) &amp;= h_{0}(t)\exp \{\gamma \text{ddI}_i +   \alpha m_{i}(t)\}
 </section>
 <section id="joint-model-with-jm-package" class="slide level2 smaller">
 <h2>Joint model with <code>JM</code> package</h2>
+<ul>
+<li>First, fit longitudinal submodel</li>
+</ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co">#-------------------------------------</span></span>
-<span id="cb18-2"><a href="#cb18-2"></a><span class="co"># joint model with JM package</span></span>
-<span id="cb18-3"><a href="#cb18-3"></a><span class="co">#-------------------------------------</span></span>
-<span id="cb18-4"><a href="#cb18-4"></a></span>
-<span id="cb18-5"><a href="#cb18-5"></a><span class="co"># first, fit longitudinal submodel</span></span>
-<span id="cb18-6"><a href="#cb18-6"></a>jmlong <span class="ot">&lt;-</span> <span class="fu">lme</span>(CD4 <span class="sc">~</span> obstime <span class="sc">+</span> obstime<span class="sc">:</span>drug,</span>
-<span id="cb18-7"><a href="#cb18-7"></a>              <span class="at">random =</span> <span class="sc">~</span> obstime <span class="sc">|</span> patient,</span>
-<span id="cb18-8"><a href="#cb18-8"></a>              <span class="at">data =</span> aids)</span>
-<span id="cb18-9"><a href="#cb18-9"></a></span>
-<span id="cb18-10"><a href="#cb18-10"></a><span class="co"># next, fit survival submodel</span></span>
-<span id="cb18-11"><a href="#cb18-11"></a>jmcox <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(Time, death) <span class="sc">~</span> drug, <span class="at">x =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb18-12"><a href="#cb18-12"></a>               <span class="at">data =</span> aids.id)</span>
-<span id="cb18-13"><a href="#cb18-13"></a></span>
-<span id="cb18-14"><a href="#cb18-14"></a><span class="co"># finally, fit joint model with piecewise baseline hazard (other options are available)</span></span>
-<span id="cb18-15"><a href="#cb18-15"></a>jmaids <span class="ot">&lt;-</span> <span class="fu">jointModel</span>(jmlong, jmcox, <span class="at">timeVar =</span> <span class="st">&quot;obstime&quot;</span>,</span>
-<span id="cb18-16"><a href="#cb18-16"></a>                     <span class="at">method =</span> <span class="st">&quot;piecewise-PH-aGH&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>jmlong <span class="ot">&lt;-</span> <span class="fu">lme</span>(CD4 <span class="sc">~</span> obstime <span class="sc">+</span> obstime<span class="sc">:</span>drug,</span>
+<span id="cb18-2"><a href="#cb18-2"></a>              <span class="at">random =</span> <span class="sc">~</span> obstime <span class="sc">|</span> patient,</span>
+<span id="cb18-3"><a href="#cb18-3"></a>              <span class="at">data =</span> aids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>Next, fit survival submodel</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>jmcox <span class="ot">&lt;-</span> <span class="fu">coxph</span>(<span class="fu">Surv</span>(Time, death) <span class="sc">~</span> drug, <span class="at">x =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-2"><a href="#cb19-2"></a>               <span class="at">data =</span> aids.id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>Finally, fit joint model with piecewise baseline hazard (other options are available)</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>jmaids <span class="ot">&lt;-</span> <span class="fu">jointModel</span>(jmlong, jmcox, <span class="at">timeVar =</span> <span class="st">&quot;obstime&quot;</span>,</span>
+<span id="cb20-2"><a href="#cb20-2"></a>                     <span class="at">method =</span> <span class="st">&quot;piecewise-PH-aGH&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="joint-model-with-jm-package-1" class="slide level2 smaller">
 <h2>Joint model with <code>JM</code> package</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">summary</span>(jmaids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">summary</span>(jmaids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -2356,9 +2360,9 @@ Convergence: 0 </code></pre>
 y_{i}(t) = \beta_0 +\beta_1t + \beta_2 \{t \times \text{ddI}_i\}  + b_{i0} + b_{i1}t + \epsilon_{i}(t)
 \]</span> does not take into account the <strong>potential</strong> MNAR missing data mechanism due to death.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>lmmmod <span class="ot">&lt;-</span> <span class="fu">lme</span>(CD4 <span class="sc">~</span> obstime <span class="sc">+</span> obstime<span class="sc">:</span>drug,</span>
-<span id="cb21-2"><a href="#cb21-2"></a>              <span class="at">random =</span> <span class="sc">~</span> obstime <span class="sc">|</span> patient,</span>
-<span id="cb21-3"><a href="#cb21-3"></a>              <span class="at">data =</span> aids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>lmmmod <span class="ot">&lt;-</span> <span class="fu">lme</span>(CD4 <span class="sc">~</span> obstime <span class="sc">+</span> obstime<span class="sc">:</span>drug,</span>
+<span id="cb23-2"><a href="#cb23-2"></a>              <span class="at">random =</span> <span class="sc">~</span> obstime <span class="sc">|</span> patient,</span>
+<span id="cb23-3"><a href="#cb23-3"></a>              <span class="at">data =</span> aids)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="comparison-to-standard-lmm-1" class="slide level2 smaller">
