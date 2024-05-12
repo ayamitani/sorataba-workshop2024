@@ -57,7 +57,7 @@ $$
 | Count         | Log            | $\text{log}(\mu_{ij})=X^{T}_{ij}\beta$ | $\phi \mu_{ij}$                    |                   
 
 
-## GLM in R
+## GLM in R{.smaller}
 ```{r}
 #| echo: TRUE
 #| eval: FALSE
@@ -66,10 +66,12 @@ $$
 ?family
 
 ## logistic regression
-glm(y ~ x1 + x2, family = binomial(link = "logit"), data = mydata)
+glm(y ~ x1 + x2, family = binomial(link = "logit"), 
+    data = mydata)
 
 ## Poisson regression
-glm(y ~ x1 + x2, family = poisson(link = "log"), data = mydata)
+glm(y ~ x1 + x2, family = poisson(link = "log"), 
+    data = mydata)
 ```
 
 
@@ -202,7 +204,7 @@ Table: Data dictionary of data from respiratory study
 
 :::
 
-## Example: Respiratory study
+## Example: Respiratory study{.smaller}
 ```{r}
 #| echo: TRUE
 
@@ -227,7 +229,7 @@ head(respl, 20)
 ```
 
 
-## Example: Descriptive analysis
+## Example: Descriptive analysis{.smaller}
 Baseline data by clinic and treatment
 ```{r}
 #| echo: TRUE
@@ -305,7 +307,7 @@ more careful treatment of the covariance model may be necessary.
 2. Compare models between different working correlation structures
   
 
-## Model mean structure
+## Model mean structure{.smaller}
 
 * Because we are working with **binary** data we need to include the argument: `scale.fix=TRUE`
 * This option keeps the scale parameter **fixed** to its default value of 1 rather than estimated. 
@@ -324,7 +326,7 @@ summary(model1)
 ```
 
 
-## Model mean structure
+## Model mean structure{.smaller}
 
 Output from three-way interaction model with unstructured working covariance
 
@@ -342,7 +344,7 @@ summary(model1)
 
 Do not reject $H_0: \beta_{8} = 0$
 
-## Model mean structure
+## Model mean structure{.smaller}
 
 Code for three two-way interactions model with unstructured working covariance
 ```{r}
@@ -696,6 +698,7 @@ summary(modfit2)
 * Higher CAL measurement indicates worse progress of periodontal disease
 * Research question: Is metabolic syndrome (MetS) related to periodontitis (measured by CAL)?
 
+::: {style="font-size: 90%;"}
 ```{r}
 #| echo: FALSE
 
@@ -704,7 +707,7 @@ dd <- data.frame(
   Type = rep("numeric", 8),
   Description = c("Unique subject identifier",
                   "Tooth identifier excluding third molars (wisdom teeth), 2-15, 18-31",
-                  "Clinical attachment loss (CAL) on each tooth if > 5 milimeters",
+                  "Clinical attachment loss (CAL) on each tooth if > 5 millimeters",
                   "Age at time of exam",
                   "Indicator of college education",
                   "History of smoking, 1 = current or former smoker, 0 = never-smoker",
@@ -714,6 +717,8 @@ dd <- data.frame(
 kable(dd) %>%
   kable_minimal()
 ```
+:::
+
 ## Example: Clinical attachment loss {.smaller}
 
 ```{r}
